@@ -1,0 +1,22 @@
+<template>
+    <div class="slds-m-around_medium slds-m-bottom_x-large">
+        <template if:true={showSpinner}>
+				<lightning-spinner variant="brand" size="medium" alternative-text="Saving Preferences ..."></lightning-spinner>
+		</template>
+        <h2 class="slds-text-heading_small slds-m-bottom_medium">
+            Channel Availabilty:
+        </h2>
+        <div style="text-align: center;">
+            <lightning-button-group>
+                <lightning-button label="Chat" name="chat" data-value={channels.chat} icon-name="utility:chat" variant={chatVariant} onclick={handleButtonSelection}>
+                </lightning-button>
+                <lightning-button label="Teams" name="teams" data-value={channels.teams} icon-name="utility:groups" variant={teamsVariant}
+                    onclick={handleButtonSelection}>
+                </lightning-button>
+                <lightning-button label="Phone" name="phone" data-value={channels.phone} icon-name="utility:call" variant={phoneVariant}
+                    onclick={handleButtonSelection}>
+                </lightning-button>
+            </lightning-button-group>
+        </div>
+    </div>
+</template>

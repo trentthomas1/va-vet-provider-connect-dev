@@ -1,0 +1,11 @@
+<template>
+    <lightning-card title="Please provide your feedback below:">
+        <template if:true={showSpinner}>
+            <lightning-spinner variant="brand" size="medium" alternative-text="Saving Feedback..."></lightning-spinner>
+        </template>
+        <lightning-textarea style="margin:10px" name="feedback" value={feedback} placeholder="Enter feeback here..." onchange={handleChange}></lightning-textarea>
+        <div style="text-align:right; margin-right:10px;">
+            <lightning-button label="Submit" variant='brand' onclick={saveFeedback} disabled={isDisabled}></lightning-button>
+        </div>
+    </lightning-card>
+</template>

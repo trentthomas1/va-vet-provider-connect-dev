@@ -1,0 +1,23 @@
+<template>
+    <article class="rate slds-card">
+        <template if:true={showSpinner}>
+            <lightning-spinner variant="brand" size="medium" alternative-text="Saving Survey ...">
+            </lightning-spinner>
+        </template>
+        <div style="text-align: center; float:left; margin-top: 1rem;">
+            <div class="slds-text-heading_small">
+                <h1>Was this session useful?</h1>
+            </div>
+            <input type="radio" id="star15" name="fiveStar" value="5" onchange={handleChange} />
+            <label for="star15" title="5 stars">5 stars</label>
+            <input type="radio" id="star14" name="fourStar" value="4" onchange={handleChange} />
+            <label for="star14" title="4 stars">4 stars</label>
+            <input type="radio" id="star13" name="threeStar" value="3" onchange={handleChange} />
+            <label for="star13" title="3 stars">3 stars</label>
+            <input type="radio" id="star12" name="twoStar" value="2" onchange={handleChange} />
+            <label for="star12" title="2 stars">2 stars</label>
+            <input type="radio" id="star11" name="oneStar" value="1" onchange={handleChange} />
+            <label for="star11" title="1 star">1 star</label>
+        </div>
+    </article>
+</template>

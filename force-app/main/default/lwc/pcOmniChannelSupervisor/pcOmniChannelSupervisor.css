@@ -1,0 +1,48 @@
+
+.available {
+    height: 15px;
+    border-radius: 50%;
+    width: 15px;
+    display: inline-block;
+    background-color: lightgreen;
+}
+
+.wrap-up {
+    height: 15px;
+    border-radius: 50%;
+    width: 15px;
+    display: inline-block;
+    background-color: orange;
+}
+
+.offline {
+    height: 15px;
+    border-radius: 50%;
+    width: 15px;
+    display: inline-block;
+    background-color: red;
+
+}
+
+.user-image {
+    height:30px; 
+    border-radius: 50%; 
+    margin-right: 10px;
+}
+
+.user-container {
+    padding:10px; 
+    border-bottom: var(--lwc-borderWidthThin,1px) solid var(--lwc-colorBorder,rgb(229, 229, 229));
+    position: relative
+}
+
+.action-container {
+    position: absolute;
+    right: 0;
+    top: 0;
+    margin: 10px;
+}
+
+.empty-list-message {
+    text-align: center;
+}
