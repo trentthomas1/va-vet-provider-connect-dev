@@ -1,0 +1,55 @@
+textarea {
+  min-height: 15rem;
+}
+
+.spinner-text {
+  position: absolute;
+  top: 60%;
+  z-index: 9051;
+  text-align: center;
+  width: 100%;
+}
+
+.card {
+  text-align: center;
+  border-bottom: 2px solid rgb(229, 229, 229);
+  padding-bottom: 20px;
+}
+
+.container-left {
+  text-align: left;
+}
+
+.container-center {
+  text-align: center;
+}
+
+.launch-teams {
+  background: #464EB8;
+  color: white;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+.launch-now {
+  color: #464EB8;
+  padding-top: 10px;
+}
+
+.right-col {
+  border-left: solid 2px rgb(229, 229, 229);
+  padding-left: 10px;
+}
+
+.case-closed {
+  color: #000000;
+  background-color: #ffffd7;;
+  padding: 12px;
+}
+
+.close-button {
+  position: absolute;
+  top: 0%;
+  right: 1%;
+  color: #000000;
+}

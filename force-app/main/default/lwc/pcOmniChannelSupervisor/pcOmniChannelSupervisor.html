@@ -1,0 +1,61 @@
+<template>
+    <lightning-card>
+        <template if:true={showSpinner}>
+            <lightning-spinner variant="brand" size="medium" alternative-text="Loading...">
+            </lightning-spinner>
+        </template>
+        <lightning-tabset>
+            <lightning-tab label="Live">
+                <template for:each={agentStatus} for:item="agent">
+                    <div key={agent.agentId} class="user-container">
+                        <p><img src={agent.agentImage} alt="Avatar" class="user-image">{agent.agentName}
+                            &nbsp;&nbsp;<span class={agent.colorStatus}></span>&nbsp;&nbsp;{agent.currentStatus}
+                            <template if:true={agent.currentPresence}> since <lightning-formatted-date-time
+                                    value={agent.currentPresence.since} year="numeric" month="numeric" day="numeric"
+                                    hour="2-digit" minute="2-digit"></lightning-formatted-date-time></template>
+                                    &nbsp;•&nbsp;Current Capacity: {agent.currentCapacity}%
+                        </p>
+                        <div class="action-container">
+                            <lightning-button if:true={agent.openCases.length} label={agent.caseButton}
+                                data-agentid={agent.agentId} onclick={handleShowCases}></lightning-button>
+                        </div>
+                        <div if:true={agent.showCases} style="margin:10px;">
+                            <lightning-datatable if:true={agent.openCases.length} key-field="Id" data={agent.openCases}
+                                columns={openCaseColumns} hide-checkbox-column='true'>
+                            </lightning-datatable>
+                            <div class="empty-list-message" if:false={agent.openCases.length}>
+                                {agent.agentName} does not have any open cases.
+                            </div>
+                        </div>
+                    </div>
+                </template>
+            </lightning-tab>
+            <lightning-tab label="History">
+                <lightning-combobox style="margin: 10px;" name="Specialist" label="Specialist" value={selectedSpecialist}
+                    placeholder="Select Specialist" options={specialistOptions} onchange={handleAgentChange}>
+                </lightning-combobox>
+                <template if:true={selectedAgent.agentId}>
+                    <lightning-tabset>
+                        <lightning-tab label="Cases">
+                            <lightning-datatable if:true={selectedAgent.allCases.length} key-field="Id"
+                                data={selectedAgent.allCases} columns={allCaseColumns} hide-checkbox-column='true'>
+                            </lightning-datatable>
+                            <div class="empty-list-message" if:false={selectedAgent.allCases.length}>
+                                {selectedAgent.agentName} does not have any cases.
+                            </div>
+                        </lightning-tab>
+                        <lightning-tab label="Availability">
+                            <lightning-datatable if:true={selectedAgent.historicStatuses.length} key-field="Id"
+                                data={selectedAgent.historicStatuses} columns={historyColumns}
+                                hide-checkbox-column='true'>
+                            </lightning-datatable>
+                            <div class="empty-list-message" if:false={selectedAgent.historicStatuses.length}>
+                                {selectedAgent.agentName} does not have availability history.
+                            </div>
+                        </lightning-tab>
+                    </lightning-tabset>
+                </template>
+            </lightning-tab>
+        </lightning-tabset>
+    </lightning-card>
+</template>

@@ -1,0 +1,291 @@
+<template>
+	<template for:each={myCases} for:item="pcCase">
+		<div class="slds-m-bottom_small slds-card case-closed" key={pcCase.Id} if:true={pcCase.show}>
+			<div  style="float: right;">
+			<button class="slds-button close-button"
+						title="Close" data-id={pcCase.Id} onclick={handleCloseAlert}>
+						X
+						<span class="slds-assistive-text">Close</span>
+					</button>
+				</div>
+			<div>Case {pcCase.Case.CaseNumber} has been {pcCase.status} by {pcCase.CreatedBy.Name}. <a data-id={pcCase.CaseId} onclick={navigateToCase}>View Case</a></div>
+		</div>
+	</template>
+	<lightning-card>
+		<div class="slds-var-p-around_medium">
+			<template if:true={showSpinner}>
+				<lightning-spinner variant="brand" size="medium" alternative-text="Creating case ...">
+				</lightning-spinner>
+				<div class='spinner-text slds-text-heading_small'>
+					<h2>{progressLabel}</h2>
+				</div>
+			</template>
+			<div class="slds-grid slds-wrap">
+				<div class="slds-size_1-of-2 slds-p-left_xx-small">
+					<p class="slds-text-heading_small slds-text-align_center slds-p-bottom_x-small">
+						Select a button for Speciality and Channel
+					</p>
+					<table width="100%">
+						<template for:each={skillsAndButtons} for:item="skill">
+							<tr key={skill.skillName}>
+								<td class="slds-text-align_left slds-truncate">
+									<strong>
+										<lightning-formatted-text value={skill.skillName} class={skill.skillNameFormat}>
+										</lightning-formatted-text>
+									</strong>
+									<!-- 									(<lightning-formatted-number value={skill.maxCapacity}> </lightning-formatted-number>)
+ -->
+								</td>
+								<td class="slds-var-p-vertical_xxx-small">
+									<lightning-button-group>
+										<lightning-button class="channel-button" disabled={skill.chat.disabled}
+											label="Chat" icon-name="utility:chat" variant={skill.chat.variant}
+											data-skill={skill.skillName} data-channel="Chat" data-channel-short="chat"
+											onclick={handleButtonSelection}>
+										</lightning-button>
+										<lightning-button class="channel-button" disabled={skill.teams.disabled}
+											label="Teams Video" icon-name="utility:groups" variant={skill.teams.variant}
+											data-skill={skill.skillName} data-channel="Teams" data-channel-short="teams"
+											onclick={handleButtonSelection}>
+										</lightning-button>
+										<lightning-button class="channel-button" disabled={skill.phone.disabled}
+											label="Phone Callback" icon-name="utility:call"
+											variant={skill.phone.variant} data-skill={skill.skillName}
+											data-channel="Phone" data-channel-short="phone"
+											onclick={handleButtonSelection}>
+										</lightning-button>
+									</lightning-button-group>
+								</td>
+							</tr>
+						</template>
+					</table>
+				</div>
+				<div class="slds-size_1-of-2 slds-p-right_xx-small">
+					<p class="slds-text-heading_small slds-text-align_center slds-p-bottom_x-small">
+						Enter additional details for your case (optional)
+					</p>
+					<section>
+						<lightning-textarea disabled={connectButtonDisable} data-id="case-details"
+							label="Case Details (optional):" placeholder="Enter your case details here."
+							max-length={maxDetailsChars} autocomplete class="detailsHeight"
+							onchange={handleCaseDetails}></lightning-textarea>
+					</section>
+					<p
+						class="slds-var-p-bottom_small slds-text-align_right slds-text-color_inverse-weak slds-text-body_small">
+						<lightning-formatted-number value={detailsCharsRemaining}> </lightning-formatted-number>
+						<lightning-formatted-text value=" characters remaining"> </lightning-formatted-text>
+					</p>
+					<section class="slds-var-p-vertical_small">
+						<lightning-input type="text" disabled={connectButtonDisable} data-id="member-id"
+							label="Veteran Member ID (optional):" placeholder="Member ID"
+							onchange={handleVeteranMemberId}></lightning-input>
+					</section>
+					<section class="slds-var-p-vertical_large slds-align_absolute-center">
+						<lightning-button variant="brand" label="Next" disabled={connectButtonDisable}
+							onclick={handleSubmit}></lightning-button>
+					</section>
+				</div>
+			</div>
+
+		</div>
+	</lightning-card>
+	<template if:true={showPhoneModal}>
+		<section role="dialog" tabindex="-1" aria-labelledby="modal-heading-01" aria-modal="true"
+			aria-describedby="modal-content-id-1" class="slds-modal slds-fade-in-open">
+			<div class="slds-modal__container">
+				<header class="slds-modal__header">
+					<button class="slds-button slds-button_icon slds-modal__close slds-button_icon-inverse"
+						title="Close" onclick={handleCloseModal}>
+						<!-- <svg class="slds-button__icon slds-button__icon_large" aria-hidden="true">
+                    <use xlink:href="/assets/icons/utility-sprite/svg/symbols.svg#close"></use>
+                </svg> -->
+						<!-- <lightning-icon icon-name="utility:close" alternative-text="Close" title="Close"></lightning-icon> -->
+						X
+						<span class="slds-assistive-text">Close</span>
+					</button>
+					<h2 id="modal-heading-01" class="slds-modal__title slds-hyphenate">Please Enter Your Callback Number
+					</h2>
+				</header>
+				<div class="slds-modal__content slds-p-around_medium" id="modal-content-id-1">
+					<lightning-input type="phone" label="Callback Number:" value={callback} required
+						onchange={handleCallback}></lightning-input>
+					<lightning-input type="phone" label="Extension:" value={callbackExt} onchange={handleCallbackExt}>
+					</lightning-input>
+				</div>
+				<footer class="slds-modal__footer">
+					<button disabled={disablePhoneConnect} onclick={handleSubmit}
+						class="slds-button slds-button_brand">Connect</button>
+				</footer>
+			</div>
+		</section>
+		<div class="slds-backdrop slds-backdrop_open"></div>
+	</template>
+	<template if:true={showCaseModal}>
+		<section role="dialog" tabindex="-1" aria-labelledby="modal-heading-01" aria-modal="true"
+			aria-describedby="modal-content-id-1" class="slds-modal slds-fade-in-open slds-modal_large">
+			<div class="slds-modal__container">
+				<header class="slds-modal__header">
+					<button class="slds-button slds-button_icon slds-modal__close slds-button_icon-inverse"
+						title="Close" onclick={handleCloseModal}>
+						X
+						<span class="slds-assistive-text">Close</span>
+					</button>
+					<h2 id="modal-heading-02" class="slds-modal__title slds-hyphenate">Connect with a Consultant</h2>
+				</header>
+				<div if:false={isChat} class="slds-modal__content slds-p-around_medium" id="modal-content-id-2.1"> <!--teams and phone config-->
+					<div if:true={currentClosedCase.Id} class="slds-m-bottom_small slds-card case-closed">
+						<div>This case has been {currentClosedCase.status} by {currentClosedCase.CreatedBy.Name}. <a data-id={currentClosedCase.CaseId} onclick={navigateToCase}>View Case</a> </div>
+					</div>
+					<div class="card">
+						<!-- <div if:false={currentClosedCase.Id} style="text-align: right;">
+							<a class="slds-text-color_destructive" onclick={openConfirmCancel}>Cancel Case</a>
+						</div> -->
+						<template if:true={isTeams}>
+							<div style="text-align: center;">
+								<!-- <button class='slds-button launch-teams' onclick={launchTeamsVideo}>Launch Teams
+								Video</button> -->
+								<p style='font-size: large;'>Redirecting to Teams video call in <b>{countdownInt}</b>&nbsp;seconds.</p>
+								<a class="launch-now" onclick={handleLaunchNow}>Launch Now</a>
+							</div>
+						</template>
+						<template if:true={isPhone}>
+							<div class="slds-text-body_regular" style="text-align: center;">
+								The consultant has received your case and will give you a call back at <b>{callback}&nbsp;
+									<template if:true={callbackExt}>Ext. {callbackExt}</template></b>.
+							</div>
+						</template>
+					</div>
+					<div class="slds-grid">
+						<div class="slds-col">
+							<p class="slds-text-heading_small slds-text-align_center slds-p-bottom_x-small">
+								Assigned Consultant:
+							</p>
+								<div class="slds-grid">
+									<div class="slds-col slds-size_1-of-3" style="text-align: center;">
+										<img src={agent.MediumPhotoUrl} alt="Avatar"
+											style="height:12vh; border-radius: 50%;">
+										<h4><b>{agent.Name}</b></h4>
+									</div>
+									<div class="slds-col slds-size_2-of-3" style="text-align: left;">
+										<p>{agent.Title}</p>
+										<p>{agent.Department}</p>
+										<!-- <p>{agent.Division}</p> -->
+										<!-- <p>{agent.Street}</p> -->
+										<p>{agent.City}, {agent.State}</p>
+										<!-- <p>{agent.PostalCode}</p> -->
+									</div>
+								</div>
+						</div>
+						<!-- Case Details Section -->
+						<div class="slds-col right-col">
+							<p class="slds-text-heading_small slds-text-align_center slds-p-bottom_x-small">
+								Case Details:
+							</p>
+							<div class="container-left">
+								<div class="slds-text-body_regular" style="margin-top: 5px"
+									if:true={caseObj.PC_Specialty__c}><b>Speciality:</b> {caseObj.PC_Specialty__c}</div>
+								<div class="slds-text-body_regular" style="margin-top: 5px"
+									if:true={caseObj.PC_Channel__c}>
+									<b>Channel:</b> {caseObj.PC_Channel__c}
+								</div>
+								<div class="slds-text-body_regular" style="margin-top: 5px"
+									if:true={caseObj.PC_Veteran_Member_ID__c}><b>Veteran Member Id:</b>
+									{caseObj.PC_Veteran_Member_ID__c}</div>
+								<div class="slds-text-body_regular" style="margin-top: 5px"
+									if:true={caseObj.Description}>
+									<b>Case Details:</b> {caseObj.Description}
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+				<div if:true={isChat} class="slds-modal__content slds-p-around_medium" id="modal-content-id-2.2"> <!--Chat config-->
+					<div if:true={currentClosedCase.Id} class="slds-m-bottom_small slds-card case-closed">
+						<div>This case has been {currentClosedCase.status} by {currentClosedCase.CreatedBy.Name}. <a data-id={currentClosedCase.CaseId} onclick={navigateToCase}>View Case</a> </div>
+					</div>
+					<!-- <div if:false={currentClosedCase.Id} style="text-align: right;">
+						<a class="slds-text-color_destructive" onclick={openConfirmCancel}>Cancel Case</a>
+					</div> -->
+					<div class="slds-grid">
+						<div class="slds-col">
+							<div>
+								<p class="slds-text-heading_small slds-text-align_center slds-p-bottom_x-small">
+									Assigned Consultant:
+								</p>
+									<div class="slds-grid">
+										<div class="slds-col slds-size_1-of-3" style="text-align: center;">
+											<img src={agent.MediumPhotoUrl} alt="Avatar"
+												style="height:12vh; border-radius: 50%;">
+											<h4><b>{agent.Name}</b></h4>
+										</div>
+										<div class="slds-col slds-size_2-of-3" style="text-align: left;">
+											<p>{agent.Title}</p>
+											<p>{agent.Department}</p>
+											<!-- <p>{agent.Division}</p> -->
+											<!-- <p>{agent.Street}</p> -->
+											<p>{agent.City}, {agent.State}</p>
+											<!-- <p>{agent.PostalCode}</p> -->
+										</div>
+									</div>
+							</div>
+							<!-- Case Details Section -->
+							<div>
+								<p class="slds-text-heading_small slds-text-align_center slds-p-bottom_x-small">
+									Case Details:
+								</p>
+								<div class="container-left">
+									<div class="slds-text-body_regular" style="margin-top: 5px"
+										if:true={caseObj.PC_Specialty__c}><b>Speciality:</b> {caseObj.PC_Specialty__c}</div>
+									<div class="slds-text-body_regular" style="margin-top: 5px"
+										if:true={caseObj.PC_Channel__c}>
+										<b>Channel:</b> {caseObj.PC_Channel__c}
+									</div>
+									<div class="slds-text-body_regular" style="margin-top: 5px"
+										if:true={caseObj.PC_Veteran_Member_ID__c}><b>Veteran Member Id:</b>
+										{caseObj.PC_Veteran_Member_ID__c}</div>
+									<div class="slds-text-body_regular" style="margin-top: 5px"
+										if:true={caseObj.Description}>
+										<b>Case Details:</b> {caseObj.Description}
+									</div>
+								</div>
+							</div>
+						</div>
+						<div class="slds-col right-col">
+							<c-pc-chat session-id={chatId}></c-pc-chat>
+						</div>
+					</div>
+				</div>
+				<footer class="slds-modal__footer">
+					<div if:false={currentClosedCase.Id} style="text-align: left;">
+						<a class="slds-text-color_destructive" onclick={openConfirmCancel}>Cancel Case</a>
+						<div style="float:right; margin-right:20px">
+							<lightning-button label="Back" variant="brand" onclick={handleCloseModal}></lightning-button>
+						</div>
+					</div>
+				</footer>
+			</div>
+		</section>
+		<div class="slds-backdrop slds-backdrop_open"></div>
+	</template>
+	<template if:true={showConfirmModal}>
+		<section role="dialog" tabindex="-1" aria-labelledby="modal-heading-01" aria-modal="true"
+			aria-describedby="modal-content-id-1" class="slds-modal slds-fade-in-open">
+			<div class="slds-modal__container">
+				<header class="slds-modal__header">
+					<h2 id="modal-heading-03" class="slds-modal__title slds-hyphenate">Are you sure?
+					</h2>
+				</header>
+				<div class="slds-modal__content slds-p-around_medium" id="modal-content-id-3">
+					<p>Are you sure you would like to cancel this case?</p>
+				</div>
+				<footer class="slds-modal__footer">
+					<button onclick={closeConfirmCancel}
+					class="slds-button slds-button_brand">Return to Case</button>
+					<button onclick={handleCancelCaseModal}
+						class="slds-button slds-button_destructive">Cancel Case</button>
+				</footer>
+			</div>
+		</section>
+		<div class="slds-backdrop slds-backdrop_open"></div>
+	</template>
+</template>

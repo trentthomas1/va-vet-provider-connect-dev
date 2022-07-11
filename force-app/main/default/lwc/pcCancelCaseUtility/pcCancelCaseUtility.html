@@ -1,0 +1,22 @@
+<template>
+    <lightning-spinner variant="brand" size="medium" alternative-text="Closing case ..." if:true={showSpinner}>
+    </lightning-spinner>
+        <div style="  display: flex;
+        justify-content: center;
+        align-items: center;
+        height:100%" if:true={showConfirm}>
+        <div style="text-align: center;">
+            <div class="slds-text-heading_small" style=" margin-bottom: 10px;">Are you sure? This will set the case status to "Closed - Unresolved".</div>
+            <div>
+                <button data-id="doNotCancelButton" class="slds-button slds-button_brand" onclick={handleCloseConfirm}>No</button>
+                <button data-id="cancelAllButton" class="slds-button slds-button_destructive" onclick={saveReason}>Yes, Close All Cases</button>
+            </div>
+        </div>
+    </div>
+    <template if:false={showConfirm}> 
+        <lightning-textarea style="margin:1%" label='Reason for Closing' value={cancelReason} onchange={handleChange} data-id='cancelReason'></lightning-textarea>
+        <div style="text-align: right; width:100%; position:absolute; bottom: 5%; right:1%;">
+            <button data-id="cancelButton" disabled={disableSave} class="slds-button slds-button_destructive" onclick={handleCancelClicked}>Close All Cases</button>
+        </div>
+    </template>
+</template>

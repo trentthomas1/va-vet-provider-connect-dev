@@ -1,0 +1,64 @@
+<template>
+    <lightning-card>
+        <template if:true={showSpinner}>
+            <lightning-spinner variant="brand" size="medium" alternative-text="Loading Chat..."></lightning-spinner>
+        </template>
+        <div if:true={showCopy} style='text-align:right'>
+            <lightning-button-icon icon-name="utility:copy"  variant="brand" alternative-text="Copy Transcript" class="slds-m-left_xx-small margin-right-small" title="Copy" onclick={handleCopy}></lightning-button-icon>
+        </div>
+        <div if:false={isClosed} style="margin:10px; text-align: right;">
+            <lightning-button icon-name="utility:close" variant="destructive" alternative-text="End Chat" label="End Chat" title="End Chat" onclick={handleEndChat}></lightning-button>
+        </div>
+    <div class="slds-chat-bookend">
+        <span class="slds-icon_container slds-icon-utility-chat slds-chat-icon">
+            <svg class="slds-icon slds-icon_x-small slds-icon-text-default" aria-hidden="true">
+                <use xlink:href="/assets/icons/utility-sprite/svg/symbols.svg#chat"></use>
+            </svg>
+        </span>
+        <p>Chat started by&nbsp;<b>{startedBy}</b> • <lightning-formatted-date-time value={session.CreatedDate} year="numeric" month="numeric" day="numeric" hour="2-digit" minute="2-digit"></lightning-formatted-date-time>
+        </p>
+    </div>
+    <section role="log" class="slds-chat" style="height: 20vh; overflow: auto;">
+        <ul class="slds-chat-list">
+            <template for:each={messages} for:item="message">
+                <li key={message.Id} data-id={message.Id} class={message.listClasses}>
+                    <div class="slds-chat-message">
+                        <div class="slds-chat-message__body">
+                            <div class={message.messageClasses}>
+                                <lightning-formatted-rich-text  value={message.Body}>
+                                
+                                </lightning-formatted-rich-text>
+                            </div>
+                            <div class="slds-chat-message__meta" aria-label={message.InsertedBy.Name}>{message.InsertedBy.Name} • <p><lightning-formatted-date-time value={message.CreatedDate} hour="2-digit" minute="2-digit"></lightning-formatted-date-time></p></div>
+                        </div>
+                    </div>
+                </li>
+            </template>
+        </ul>
+    </section>
+    <div if:true={isClosed} class="slds-chat-bookend slds-chat-bookend_stop">
+        <span class="slds-icon_container slds-icon-utility-end_chat slds-chat-icon">
+            <svg class="slds-icon slds-icon_x-small slds-icon-text-default" aria-hidden="true">
+                <use xlink:href="/assets/icons/utility-sprite/svg/symbols.svg#end_chat"></use>
+            </svg>
+        </span>
+        <p>Chat ended by <b>{closedBy}</b> • <lightning-formatted-date-time value={closedDate} year="numeric" month="numeric" day="numeric" hour="2-digit" minute="2-digit"></lightning-formatted-date-time>
+        </p>
+    </div>
+    <div if:false={isClosed}>
+        <div class="margin-right-small" style="text-align: right; color: gray;">
+            {charLength}/280
+        </div>
+        <lightning-textarea
+        max-length="280"
+        onchange={handleChange}
+        onkeyup={handleSendMessage}
+        value={newMessage}
+        data-id="textarea">
+    </lightning-textarea>
+    <div style="margin:10px; text-align: right;">
+        <lightning-button icon-name="utility:send" data-id="button" variant="brand" alternative-text="Send" label="Send" title="Send" onclick={handleSendMessage} disabled={disableSend}></lightning-button>
+    </div>
+    </div>
+</lightning-card>
+</template>
