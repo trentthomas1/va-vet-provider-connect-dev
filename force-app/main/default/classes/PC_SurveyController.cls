@@ -19,6 +19,9 @@ public with sharing class PC_SurveyController {
     @AuraEnabled(cacheable=true)
     public static PC_Survey__c getSurvey(Id caseId){
         try{
+            if(String.isBlank(caseId)) {
+                throw new PC_CustomException('Case Id cannot be blank.');
+            }
             Id providerRTId = Schema.SObjectType.PC_Survey__c.getRecordTypeInfosByDeveloperName().get('Provider_Survey').getRecordTypeId();
             Id specialistRTId = Schema.SObjectType.PC_Survey__c.getRecordTypeInfosByDeveloperName().get('Specialist_Survey').getRecordTypeId();
             
@@ -70,19 +73,13 @@ public with sharing class PC_SurveyController {
     **/
     @AuraEnabled(cacheable=true)
     public static List<Case> getSurveysToComplete(){
-        try{
-            return [
+        return [
                 SELECT Id, CaseNumber, CreatedDate, PC_Specialty__c, PC_Channel__c, Owner.Name, PC_Survey_Created__c
                 FROM CASE 
                 WHERE RecordType.DeveloperName = 'PC_Case'
                 AND PC_Survey_Created__c excludes ('PCP Survey')
                 ORDER BY CaseNumber DESC
                 LIMIT 20];
-        } catch (Exception e) {
-            log_LogService.log('PC_SurveyController.getSurveysToComplete Exception', log_LogService.LogType.ERROR, e);
-            log_LogService.publish();
-            throw new AuraHandledException(e.getMessage());
-        }
     }
 
 

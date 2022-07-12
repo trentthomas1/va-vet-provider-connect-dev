@@ -103,12 +103,28 @@ public class PC_SurveyControllerTest {
     }
 
     /**
-    * @description Method to test saveSurvey method
+    * @description Method to negatively test getSurvey method
     * @author George Elias | 07-06-2022
     * @return  void
     **/
     @isTest
-    static void saveSurveyTest(){
+    static void getSurveyTestNegative(){
+        try{
+            PC_Survey__c survey = PC_SurveyController.getSurvey(null);
+            System.assert(false);
+        } catch(Exception e) {
+            System.assert(true);
+        }
+    }
+
+
+    /**
+    * @description Method to positively test saveSurvey method
+    * @author George Elias | 07-06-2022
+    * @return  void
+    **/
+    @isTest
+    static void saveSurveyTestPositive(){
         User provider = [SELECT Id FROM User WHERE LastName = 'Test PC Provider' LIMIT 1];
         System.runAs(provider){
             Case c = new Case(
@@ -131,6 +147,21 @@ public class PC_SurveyControllerTest {
             survey = [SELECT PC_Was_this_session_useful__c FROM PC_Survey__c LIMIT 1];
 
             System.assertEquals('5', survey.PC_Was_this_session_useful__c);
+        }
+    }
+
+    /**
+    * @description Method to negatively test saveSurvey method
+    * @author George Elias | 07-06-2022
+    * @return  void
+    **/
+    @isTest
+    static void saveSurveyTestNegative(){
+        try {
+            PC_SurveyController.saveSurvey(null);
+            System.assert(false);
+        } catch(Exception e) {
+            System.assert(true);
         }
     }
     

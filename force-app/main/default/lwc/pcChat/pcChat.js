@@ -226,6 +226,17 @@ export default class PcChat extends LightningElement {
             }, 1000)
 
         })
+        .catch(error => {
+            console.error(error)
+            this.dispatchEvent(
+                new ShowToastEvent({
+                    message: error.body ? error.body.message : error.message,
+                    title: 'Error occurred trying to end the chat',
+                    variant: 'error',
+                    mode: 'sticky'
+                })
+            );
+        })
         .finally( () => {
             this.showSpinner = false;
         })

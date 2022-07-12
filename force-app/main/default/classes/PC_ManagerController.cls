@@ -42,6 +42,10 @@ public with sharing class PC_ManagerController {
                 lsUserIds.add(sr.RelatedRecordId);
             }
 
+            if(lsUserIds.size() == 0) {
+                throw new PC_CustomException('No Provider Connect specialists found.');
+            }
+
             Map<Id, User> mpUsers = new Map<Id, User> ([SELECT Id, Name, MediumPhotoUrl FROM User WHERE Id in :lsUserIds ORDER BY Name]);
             Map<String, List<UserServicePresence>> mpUserPresence = new Map<String, List<UserServicePresence>>();
             for(UserServicePresence usp : [

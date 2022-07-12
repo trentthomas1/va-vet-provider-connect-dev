@@ -47,16 +47,31 @@ public class PC_ProviderConnectController_Test {
     }
 
     /**
-    * @description Method to test getSkills method
+    * @description Method to positively test getSkills method
     * @author George Elias | 07-06-2022
     * @return  void
     **/
     @isTest
-    static void getSkillsTest(){
+    static void getSkillsTestPositive(){
         User provider = [SELECT Id FROM User WHERE LastName = 'Test PC Provider' LIMIT 1];
         System.runAs(provider){
             Map<String,Object> skillStatus = PC_ProviderConnectController.getSkills('2022-10-10T14:48:00');
             System.assertEquals(5, ( (List<Object>) skillStatus.get('statuses')).size());
+        }
+    }
+    
+    /**
+    * @description Method to negatively test getSkills method
+    * @author George Elias | 07-06-2022
+    * @return  void
+    **/
+    @isTest
+    static void getSkillsTestNegative(){
+        try{
+            Map<String,Object> skillStatus = PC_ProviderConnectController.getSkills('test');
+            System.assert(false);
+        } catch(Exception e) {
+            System.assert(true);
         }
     }
 
@@ -76,14 +91,13 @@ public class PC_ProviderConnectController_Test {
         }
     }
 
-
     /**
-    * @description Method to test setChannelAvailability method
+    * @description Method to positively test setChannelAvailability method
     * @author George Elias | 07-06-2022
     * @return  void
     **/
     @isTest
-    static void setChannelAvailabilityTest(){
+    static void setChannelAvailabilityTestPositive(){
         User specialist = [SELECT Id FROM User WHERE LastName = 'Test PC Specialist' LIMIT 1];
         System.runAs(specialist){
             PC_ProviderConnectController.setChannelAvailability('phone', false);
@@ -99,12 +113,27 @@ public class PC_ProviderConnectController_Test {
     }
 
     /**
-    * @description Method to test createCase method
+    * @description Method to negatively test setChannelAvailability method
     * @author George Elias | 07-06-2022
     * @return  void
     **/
     @isTest
-    static void createCaseTest(){
+    static void setChannelAvailabilityTestNegative(){
+        try {
+            PC_ProviderConnectController.setChannelAvailability('test', null);
+            System.assert(false);
+        } catch(Exception e) {
+            System.assert(true);
+        }
+    }
+
+    /**
+    * @description Method to positively test createCase method
+    * @author George Elias | 07-06-2022
+    * @return  void
+    **/
+    @isTest
+    static void createCaseTestPositive(){
         Case c = PC_ProviderConnectController.createCase('Cardiology', 'Test Details', '987654321', 'Chat', '1234567890');
 
         List<Case> lsCase = [SELECT Id FROM Case];
@@ -113,12 +142,27 @@ public class PC_ProviderConnectController_Test {
     }
 
     /**
-    * @description Method to test getAssignedAgent method
+    * @description Method to negative test createCase method
     * @author George Elias | 07-06-2022
     * @return  void
     **/
     @isTest
-    static void getAgentTest() {
+    static void createCaseTestNegative(){
+        try {
+            Case c = PC_ProviderConnectController.createCase('Test', 'Test', 'Test', 'Test', 'Test');
+            System.assert(false);
+        } catch(Exception e) {
+            System.assert(true);
+        }
+    }
+
+    /**
+    * @description Method to positively test getAssignedAgent method
+    * @author George Elias | 07-06-2022
+    * @return  void
+    **/
+    @isTest
+    static void getAgentTestPositive() {
         Case c = PC_ProviderConnectController.createCase('Cardiology', 'Test Details', '987654321', 'Chat', '1234567890');
         User provider = [SELECT Id FROM User WHERE LastName = 'Test PC Provider' LIMIT 1];
 
@@ -130,14 +174,29 @@ public class PC_ProviderConnectController_Test {
         }
     }
 
-
     /**
-    * @description Method to test cancelCase method
+    * @description Method to negatively test getAssignedAgent method
     * @author George Elias | 07-06-2022
     * @return  void
     **/
     @isTest
-    static void cancelCaseTest() {
+    static void getAgentTestNegative() {
+       try {
+            Map<String, Object> results = PC_ProviderConnectController.getAssignedAgent(null);
+            System.assert(false);
+        } catch(Exception e) {
+            System.assert(true);
+        }
+    }
+
+
+    /**
+    * @description Method to postively test cancelCase method
+    * @author George Elias | 07-06-2022
+    * @return  void
+    **/
+    @isTest
+    static void cancelCaseTestPositive() {
         User provider = [SELECT Id FROM User WHERE LastName = 'Test PC Provider' LIMIT 1];
         System.runAs(provider) {
             Case c = PC_ProviderConnectController.createCase('Cardiology', 'Test Details', '987654321', 'Chat', '1234567890');
@@ -149,13 +208,30 @@ public class PC_ProviderConnectController_Test {
         }
     }
 
+
     /**
-    * @description Method to test cancelOpenCases method
+    * @description Method to negatively test cancelCase method
     * @author George Elias | 07-06-2022
     * @return  void
     **/
     @isTest
-    static void cancelOpenCasesTest() {
+    static void cancelCaseTestNegative() {
+        try {
+            PC_ProviderConnectController.cancelCase(null);
+            System.assert(false);
+        } catch(Exception e) {
+            System.assert(true);
+        }
+    }
+
+
+    /**
+    * @description Method to positively test cancelOpenCases method
+    * @author George Elias | 07-06-2022
+    * @return  void
+    **/
+    @isTest
+    static void cancelOpenCasesTestPositive() {
         User specialist = [SELECT Id FROM User WHERE LastName = 'Test PC Specialist' LIMIT 1];
         System.runAs(specialist) {
             Case c1 = PC_ProviderConnectController.createCase('Cardiology', 'Test Details', '987654321', 'Chat', '1234567890');
@@ -169,6 +245,27 @@ public class PC_ProviderConnectController_Test {
             for(Case c : lsCases) {
                 System.assertEquals(true, c.IsClosed);
             }
+        }
+    }
+
+    /**
+    * @description Method to negatively test cancelOpenCases method
+    * @author George Elias | 07-06-2022
+    * @return  void
+    **/
+    @isTest
+    static void cancelOpenCasesTestNegative() {
+        try {
+            User specialist = [SELECT Id FROM User WHERE LastName = 'Test PC Specialist' LIMIT 1];
+            System.runAs(specialist) {
+                Case c1 = PC_ProviderConnectController.createCase('Cardiology', 'Test Details', '987654321', 'Chat', '1234567890');
+                Case c2 = PC_ProviderConnectController.createCase('Neurology', 'Test Details', '987654321', 'Chat', '1234567890');
+
+                PC_ProviderConnectController.cancelOpenCases(null);
+                System.assert(false);
+            }
+        } catch(Exception e) {
+            System.assert(true);
         }
     }
 

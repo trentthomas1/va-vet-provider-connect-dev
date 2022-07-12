@@ -271,6 +271,10 @@ public without sharing class PC_ProviderConnectController {
         try {
             Map<String,Object> returnMap = new Map<String,String>();
 
+            if(String.isBlank(caseId)) {
+                throw new PC_CustomException('Case Id cannot be blank.');
+            }
+
             List<AgentWork> lsAW = [
                 SELECT Id, UserId, User.Email, User.Name, User.MediumPhotoUrl,
                 WorkItemId, WorkItem.PC_Channel__c 
@@ -351,6 +355,9 @@ public without sharing class PC_ProviderConnectController {
     @AuraEnabled
     public static List<String> cancelOpenCases(String cancelReason) {
         try{
+            if(String.isBlank(cancelReason)) {
+                throw new PC_CustomException('Cancel Reason cannot be blank.');
+            }
             Id pcrtid = Case.SObjectType.getDescribe().getRecordTypeInfosByDeveloperName().get('PC_Case').getRecordTypeId();
             List<Case> lsOpenCases = [
                 SELECT Id, PC_Specialist_Comments__c 
@@ -363,7 +370,9 @@ public without sharing class PC_ProviderConnectController {
             }
             List<String> lsCaseIds = new List<String>();
             for(Case c : lsOpenCases) {
-                c.PC_Specialist_Comments__c = String.isNotBlank(c.PC_Specialist_Comments__c)  ? c.PC_Specialist_Comments__c + '\n\nClosed Reason:\n' + cancelReason : 'Closed Reason:\n' + cancelReason;
+                if(String.isNotBlank(cancelReason)){
+                    c.PC_Specialist_Comments__c = String.isNotBlank(c.PC_Specialist_Comments__c)  ? c.PC_Specialist_Comments__c + '\n\nClosed Reason:\n' + cancelReason : 'Closed Reason:\n' + cancelReason;
+                }
                 c.Status = 'Closed - Unresolved';
                 lsCaseIds.add(c.Id);
             }

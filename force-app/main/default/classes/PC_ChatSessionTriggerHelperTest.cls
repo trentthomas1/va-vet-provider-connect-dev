@@ -24,16 +24,32 @@ public class PC_ChatSessionTriggerHelperTest {
     }
 
     /**
-    * @description Method to test clearSessionCacheData method
+    * @description Method to positively test clearSessionCacheData method
     * @author George Elias | 07-06-2022
     * @return  void
     **/
     @isTest
-    public static void clearSessionCacheDataTest(){
+    public static void clearSessionCacheDataTestPositive(){
         PC_Chat_Session__c chatSession = [SELECT Id FROM PC_Chat_Session__c LIMIT 1];
         chatSession.PC_Is_Closed__c = true;
         update chatSession;
         Cache.OrgPartition orgPart = Cache.Org.getPartition('local.pcChat');
         System.assertEquals(false, orgPart.contains(chatSession.Id));
+    }
+
+    /**
+    * @description Method to negatively test clearSessionCacheData method
+    * @author George Elias | 07-06-2022
+    * @return  void
+    **/
+    @isTest
+    public static void clearSessionCacheDataTestNegative() {
+        try {
+            PC_ChatSessionTriggerHelper.clearSessionCacheData(new List<PC_Chat_Session__c>{new PC_Chat_Session__c()});
+            System.assert(false);
+        } catch(Exception e) {
+            System.assert(true);
+        }
+
     }
 }

@@ -16,7 +16,6 @@ public class PC_ManagerController_Test {
     * @author George Elias | 07-06-2022
     * @return  void
     **/
-    @TestSetup
     static void makeData(){
         User admin = [SELECT Id FROM User WHERE Profile.Name = 'System Administrator' AND IsActive = true limit 1];
         List<String> channels = new List<String>{'Chat', 'Teams', 'Phone'};
@@ -59,17 +58,32 @@ public class PC_ManagerController_Test {
     }
 
     /**
-    * @description Method to test getAgentHistory method
+    * @description Method to positively test getAgentHistory method
     * @author George Elias | 07-06-2022
     * @return  void
     **/
     @isTest
-    public static void getAgentHistoryTest() {
-
+    public static void getAgentHistoryTestPositive() {
+        makeData();
         User manager = [SELECT Id FROM User WHERE LastName = 'Test PC Manager' LIMIT 1];
         System.runAs(manager) {
             List<PC_ManagerController.AgentHistory> lsAH = PC_ManagerController.getAgentHistory();
             System.assert(lsAH[0].agentId == manager.Id);
+        }
+    }
+
+    /**
+    * @description Method to negatively test getAgentHistory method
+    * @author George Elias | 07-06-2022
+    * @return  void
+    **/
+    @isTest
+    public static void getAgentHistoryTestNegative() {
+        try{
+            List<PC_ManagerController.AgentHistory> lsAH = PC_ManagerController.getAgentHistory();
+            System.assert(false);
+        } catch(Exception e) {
+            System.assert(true);
         }
     }
 }

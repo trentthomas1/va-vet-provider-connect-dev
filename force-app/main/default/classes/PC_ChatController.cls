@@ -21,7 +21,10 @@ public with sharing class PC_ChatController {
     @AuraEnabled 
     public static PC_Chat_Session__c getChatterMessages(String sessionId, String caseId, String lastMessageTime){
 
-        try{
+        try {
+            if(String.isBlank(sessionId) && String.isBlank(caseId)) {
+                throw new PC_CustomException('Session Id and Case Id cannot be both blank.');
+            }
             DateTime dt = null;
             if(!String.isBlank(lastMessageTime)){
                 dt = DateTime.ValueofGmt( lastMessageTime.replace('T', ' ') );
@@ -52,6 +55,9 @@ public with sharing class PC_ChatController {
     @AuraEnabled
     public static PC_CacheResults getChatterMessagesCache(String sessionId, String lastMessageTime){
         try { 
+            if(String.isBlank(sessionId)) {
+                throw new PC_CustomException('Session Id cannot be blank.');
+            }
             DateTime dt = null;
             if(!String.isBlank(lastMessageTime)){
                 dt = DateTime.ValueofGmt( lastMessageTime.replace('T', ' ') );
@@ -105,6 +111,11 @@ public with sharing class PC_ChatController {
     @AuraEnabled
     public static void saveChatterMessage(String sessionId, String message){
         try{
+            if(String.isBlank(sessionId)) {
+                throw new PC_CustomException('Session Id cannot be blank.');
+            } else if(String.isBlank(message)) {
+                throw new PC_CustomException('Message cannot be blank.');
+            }
             //Used to maintain a maximum list size for chatList
             Integer CACHE_MAX_LIST_SIZE = 20;
 
@@ -159,6 +170,9 @@ public with sharing class PC_ChatController {
     @AuraEnabled
     public static PC_Chat_Session__c closeChatSession(String sessionId){
         try {
+            if(String.isBlank(sessionId)) {
+                throw new PC_CustomException('Session Id cannot be blank.');
+            }
             PC_Chat_Session__c session = [SELECT PC_Is_Closed__c FROM PC_Chat_Session__c WHERE Id = : sessionId];
             if(session.PC_Is_Closed__c == false){
                 update new PC_Chat_Session__c(
