@@ -207,7 +207,6 @@ export default class PcOmniChannelSupervisor extends LightningElement {
             })
         })
         .catch( error => {
-            console.error(error)
 				this.dispatchEvent(
 					new ShowToastEvent({
 						message: error.body ? error.body.message : error.message,

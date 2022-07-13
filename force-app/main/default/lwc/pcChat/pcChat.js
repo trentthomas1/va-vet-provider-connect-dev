@@ -99,7 +99,6 @@ export default class PcChat extends LightningElement {
         .catch( error => {
             
             if(this.errorCounter%10 === 0) {
-                console.error(error)
                 this.dispatchEvent(
                     new ShowToastEvent({
                         message: error.body ? error.body.message : error.message,
@@ -153,7 +152,6 @@ export default class PcChat extends LightningElement {
             }
         })
         .catch( error => {
-            console.error(error)
             //If there is error with cache, fetch chat list from database
             this.getChatter()
         })
@@ -206,7 +204,6 @@ export default class PcChat extends LightningElement {
             this.newMessage = ''
             saveChatterMessage({sessionId : this.sessionId, message: tempMessage})
             .catch( error => {
-                console.error(error)
                 this.newMessage = tempMessage
             })
         }
@@ -227,7 +224,6 @@ export default class PcChat extends LightningElement {
 
         })
         .catch(error => {
-            console.error(error)
             this.dispatchEvent(
                 new ShowToastEvent({
                     message: error.body ? error.body.message : error.message,
@@ -246,7 +242,6 @@ export default class PcChat extends LightningElement {
         try{
             this.template.querySelector('[data-id="'+ messageId +'"]').scrollIntoView({behavior: "smooth", block: "center", inline: "nearest"});
         } catch(e) {
-            console.error(e)
         }
     }
 

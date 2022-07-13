@@ -26,7 +26,6 @@ export default class PcSurvey extends LightningElement {
             this.showSpinner = false
         } else if (result.error) {
             this.showSpinner = false;
-            console.error(result.error)
             this.dispatchEvent(
                 new ShowToastEvent({
                     title: 'Error',
@@ -53,7 +52,6 @@ export default class PcSurvey extends LightningElement {
         })
         .catch( error => {
             this.showSpinner = false;
-            console.error(error);
             this.dispatchEvent(
                 new ShowToastEvent({
                     title: 'Error',

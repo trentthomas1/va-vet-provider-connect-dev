@@ -12,7 +12,6 @@ export default class PcChannelSelection extends LightningElement {
     @wire(getChannelAvailability)
     channelAvailability(result) {
         this.result = result
-        console.log(result)
         if (result.data) {
             this.channels = result.data;
             this.chatVariant = this.channels.chat ? 'brand' : 'neutral'
@@ -55,7 +54,6 @@ export default class PcChannelSelection extends LightningElement {
             }
         })
         .catch(error => {
-            console.log(error)
             this.dispatchEvent(
                 new ShowToastEvent({
                     title: 'Error Loading Page',

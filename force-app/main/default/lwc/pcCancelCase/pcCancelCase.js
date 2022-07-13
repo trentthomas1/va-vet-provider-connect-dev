@@ -62,7 +62,6 @@ export default class PcCancelCase extends LightningElement {
                         variant: 'error'
                     })
                 );
-                console.error(error)
             })
             .finally(() => {
                 this.showSpinner = false;

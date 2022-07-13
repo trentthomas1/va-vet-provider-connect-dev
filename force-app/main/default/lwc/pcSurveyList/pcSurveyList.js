@@ -58,7 +58,6 @@ export default class PcSurveyList extends LightningElement {
     @wire(getSurveysToComplete)
     getCases(result) {
         this.result = result
-        console.log(result)
         if (result.data) {
             let tempData = [...result.data];
             if(tempData.length > 0) {
@@ -74,7 +73,6 @@ export default class PcSurveyList extends LightningElement {
                 this.data.push(record)
             })
         } else if (result.error) {
-            console.error(result.error)
             this.dispatchEvent(
                 new ShowToastEvent({
                     title: 'Error',

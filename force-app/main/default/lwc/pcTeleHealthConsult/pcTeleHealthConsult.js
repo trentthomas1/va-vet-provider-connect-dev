@@ -46,7 +46,6 @@ export default class TeleHealthConsultation extends NavigationMixin(LightningEle
 			this.callbackExt = data.fields.Extension.value
 		} else if (error) {
 			this.error = error;
-			console.error(error)
 		}
 	}
 
@@ -124,7 +123,6 @@ export default class TeleHealthConsultation extends NavigationMixin(LightningEle
 				}
 			})
 			.catch((error) => {
-				console.error(error)
 				this.dispatchEvent(
 					new ShowToastEvent({
 						message: error.body ? error.body.message : error.message,
@@ -212,7 +210,6 @@ export default class TeleHealthConsultation extends NavigationMixin(LightningEle
 					try {
 						this.waitForRouting()
 					} catch (e) {
-						console.error(e);
 					}
 				})
 				.catch(error => {
@@ -223,7 +220,6 @@ export default class TeleHealthConsultation extends NavigationMixin(LightningEle
 							mode: 'sticky'
 						})
 					);
-					console.error(error);
 					this.showSpinner = false;
 				})
 		}
@@ -257,7 +253,6 @@ export default class TeleHealthConsultation extends NavigationMixin(LightningEle
 				}
 			})
 			.catch(error => {
-				console.error(error)
 			})
 	}
 
