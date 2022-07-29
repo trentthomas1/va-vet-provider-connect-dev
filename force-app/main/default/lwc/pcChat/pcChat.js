@@ -107,8 +107,6 @@ export default class PcChat extends LightningElement {
                         mode: 'sticky'
                     })
                 );
-                // clearInterval(this.getMessageInterval)
-                this.retry = true
             }
             this.errorCounter++
         })
@@ -118,7 +116,6 @@ export default class PcChat extends LightningElement {
         if(this.sessionId) {
         getChatterMessagesCache({sessionId: this.sessionId, lastMessageTime: this.mostRecentMessage})
         .then( result => {
-            this.retry = false
             this.isClosed = result.isClosed
             this.closedBy = result.closedBy
             this.closedDate = result.closedDate

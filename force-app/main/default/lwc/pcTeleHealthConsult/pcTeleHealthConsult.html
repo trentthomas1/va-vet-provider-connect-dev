@@ -28,14 +28,12 @@
 					<table width="100%">
 						<template for:each={skillsAndButtons} for:item="skill">
 							<tr key={skill.skillName}>
-								<td class="slds-text-align_left slds-truncate">
+								<th class="slds-text-align_left slds-truncate">
 									<strong>
 										<lightning-formatted-text value={skill.skillName} class={skill.skillNameFormat}>
 										</lightning-formatted-text>
 									</strong>
-									<!-- 									(<lightning-formatted-number value={skill.maxCapacity}> </lightning-formatted-number>)
- -->
-								</td>
+								</th>
 								<td class="slds-var-p-vertical_xxx-small">
 									<lightning-button-group>
 										<lightning-button class="channel-button" disabled={skill.chat.disabled}
@@ -221,10 +219,7 @@
 										<div class="slds-col slds-size_2-of-3" style="text-align: left;">
 											<p>{agent.Title}</p>
 											<p>{agent.Department}</p>
-											<!-- <p>{agent.Division}</p> -->
-											<!-- <p>{agent.Street}</p> -->
 											<p>{agent.City}, {agent.State}</p>
-											<!-- <p>{agent.PostalCode}</p> -->
 										</div>
 									</div>
 							</div>

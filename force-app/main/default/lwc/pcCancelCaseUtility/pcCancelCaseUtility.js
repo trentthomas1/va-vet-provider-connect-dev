@@ -59,7 +59,7 @@ export default class PcCancelCaseUtility extends LightningElement {
                 this.dispatchEvent(
                     new ShowToastEvent({
                         title: 'Error Closing Case',
-                        message: error.body.message,
+                        message: error.body ? error.body.message : error.message,
                         variant: 'error'
                     })
                 );

@@ -1,0 +1,17 @@
+{
+    "agent": {
+      "Id": "0053d000001Ew3pAAC",
+      "Name": "George Elias",
+      "MediumPhotoUrl": "https://va-vet--pcdev--c.documentforce.com/profilephoto/7293S0000006BiK/M",
+      "Email": "gelias@goaldc.com",
+      "Street": "150 S Huntington Ave",
+      "City": "Boston",
+      "State": "MA",
+      "PostalCode": "02130",
+      "Title": "Cardiologist",
+      "Department": "General Cardiology",
+      "Division": "VISN 2",
+      "ProfilePhotoId": "7293S0000006BiK"
+    },
+    "chatId": "a293S0000005G52QAE"
+  }

@@ -7,7 +7,7 @@
             <lightning-button-icon icon-name="utility:copy"  variant="brand" alternative-text="Copy Transcript" class="slds-m-left_xx-small margin-right-small" title="Copy" onclick={handleCopy}></lightning-button-icon>
         </div>
         <div if:false={isClosed} style="margin:10px; text-align: right;">
-            <lightning-button icon-name="utility:close" variant="destructive" alternative-text="End Chat" label="End Chat" title="End Chat" onclick={handleEndChat}></lightning-button>
+            <lightning-button icon-name="utility:close" variant="destructive" label="End Chat" title="End Chat" onclick={handleEndChat}></lightning-button> <!--alternative-text="End Chat" -->
         </div>
     <div class="slds-chat-bookend">
         <span class="slds-icon_container slds-icon-utility-chat slds-chat-icon">
@@ -57,7 +57,7 @@
         data-id="textarea">
     </lightning-textarea>
     <div style="margin:10px; text-align: right;">
-        <lightning-button icon-name="utility:send" data-id="button" variant="brand" alternative-text="Send" label="Send" title="Send" onclick={handleSendMessage} disabled={disableSend}></lightning-button>
+        <lightning-button icon-name="utility:send" data-id="button" variant="brand" label="Send" title="Send" onclick={handleSendMessage} disabled={disableSend}></lightning-button> <!--alternative-text="Send"-->
     </div>
     </div>
 </lightning-card>

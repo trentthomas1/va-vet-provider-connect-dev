@@ -1,0 +1,61 @@
+{
+    "statuses": [
+      {
+        "chatDisabled": false,
+        "hasPresence": true,
+        "minCapacity": 10,
+        "phoneDisabled": false,
+        "skillName": "Cardiology",
+        "teamsDisabled": true
+      },
+      {
+        "chatDisabled": true,
+        "hasPresence": false,
+        "minCapacity": 20,
+        "phoneDisabled": true,
+        "skillName": "Clinical Pharmacy",
+        "teamsDisabled": true
+      },
+      {
+        "chatDisabled": true,
+        "hasPresence": false,
+        "minCapacity": 20,
+        "phoneDisabled": true,
+        "skillName": "Neurology",
+        "teamsDisabled": true
+      },
+      {
+        "chatDisabled": true,
+        "hasPresence": false,
+        "minCapacity": 20,
+        "phoneDisabled": true,
+        "skillName": "Occupational Therapy",
+        "teamsDisabled": true
+      },
+      {
+        "chatDisabled": false,
+        "hasPresence": true,
+        "minCapacity": 10,
+        "phoneDisabled": false,
+        "skillName": "Physical Therapy",
+        "teamsDisabled": true
+      },
+      {
+        "chatDisabled": true,
+        "hasPresence": false,
+        "minCapacity": 20,
+        "phoneDisabled": true,
+        "skillName": "Pulmonary",
+        "teamsDisabled": true
+      },
+      {
+        "chatDisabled": true,
+        "hasPresence": false,
+        "minCapacity": 20,
+        "phoneDisabled": true,
+        "skillName": "Weight Management And Move! Program- Group",
+        "teamsDisabled": true
+      }
+    ],
+    "myCases": []
+  }
