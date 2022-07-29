@@ -1,0 +1,45 @@
+{
+    "Id": "a293S00000054QfQAI",
+    "CreatedById": "0053d000001Ew3pAAC",
+    "PC_Case__c": "5003S0000033BmpQAE",
+    "CreatedDate": "2022-06-30T19:36:03.000Z",
+    "PC_Is_Closed__c": true,
+    "PC_Closed_Date__c": "2022-06-30T19:46:07.000Z",
+    "PC_Closed_By__c": "0053d000001Ew3pAAC",
+    "Feeds": [
+      {
+        "ParentId": "a293S00000054QfQAI",
+        "Id": "0D53S000004MCrlSAG",
+        "Body": "Test 1",
+        "Type": "TextPost",
+        "CreatedDate": "2022-06-30T19:36:24.000Z",
+        "InsertedById": "0053d000001Ew3pAAC",
+        "IsRichText": false,
+        "InsertedBy": {
+          "Name": "George Elias",
+          "Id": "0053d000001Ew3pAAC"
+        }
+      },
+      {
+        "ParentId": "a293S00000054QfQAI",
+        "Id": "0D53S000004MD5JSAW",
+        "Body": "Test 2",
+        "Type": "TextPost",
+        "CreatedDate": "2022-06-30T19:44:02.000Z",
+        "InsertedById": "0053d000001Ew3pAAC",
+        "IsRichText": false,
+        "InsertedBy": {
+          "Name": "George Elias",
+          "Id": "0053d000001Ew3pAAC"
+        }
+      }
+    ],
+    "CreatedBy": {
+      "Name": "George Elias",
+      "Id": "0053d000001Ew3pAAC"
+    },
+    "PC_Closed_By__r": {
+      "Name": "George Elias",
+      "Id": "0053d000001Ew3pAAC"
+    }
+  }

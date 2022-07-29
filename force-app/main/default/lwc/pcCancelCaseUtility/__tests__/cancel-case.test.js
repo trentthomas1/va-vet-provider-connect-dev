@@ -2,24 +2,15 @@ import { createElement } from 'lwc';
 import CancelCase from 'c/pcCancelCaseUtility';
 import cancelOpenCases from '@salesforce/apex/PC_ProviderConnectController.cancelOpenCases';
 
-jest.mock(
-    "@salesforce/apex/PC_ProviderConnectController.cancelOpenCases",
-    () => {
-        return {
-            default: jest.fn(payload => {
-                const response = payload.records.map((record, index) => {
-                    return Object.assign({ Id: "TEST_ID" + index }, record);
-                });
-                return response;
-            })
-        };
-    },
-    { virtual: true }
-);
-
-
-// const mockDataEmpty = require('./data/cancelCasesEmptyMock.json');
-// const mockDataSuccess = require('./data/cancelCasesSuccessMock.json');
+// jest.mock(
+//     "@salesforce/apex/PC_ProviderConnectController.cancelOpenCases",
+//     () => {
+//         return {
+//             default: jest.fn()
+//         };
+//     },
+//     { virtual: true }
+// );
 
 describe('c-pc-cancel-case-utility', () => {
 
@@ -86,27 +77,77 @@ describe('c-pc-cancel-case-utility', () => {
     });
 
 
-    test('Confirm Cancel All Cases', () => {
+    test('Confirm Cancel All Cases Pass', () => {
         const CancelCaseElement = createElement('c-pc-cancel-case-utility', {
             is: CancelCase
         });
 
         const toastEventHandler = jest.fn()
         // add the event listener to the component
-        comp.addEventListener(ShowToastEventName, toastEventHandler)
+        CancelCaseElement.addEventListener('lightning__showtoast', toastEventHandler)
         
         document.body.appendChild(CancelCaseElement);
 
-        const cancelButton = CancelCaseElement.shadowRoot.querySelector('[data-id="cancelButton"]');
-        
+        let textElement = CancelCaseElement.shadowRoot.querySelector('[data-id="cancelReason"]');
+
+        textElement.value = 'test reason';
+        textElement.dispatchEvent(new CustomEvent('change'));
+
+        let cancelButton = CancelCaseElement.shadowRoot.querySelector('[data-id="cancelButton"]');
+        const mockSuccess = require("./data/cancelCasesSuccessMock.json");
+
+        cancelOpenCases.mockResolvedValue(mockSuccess);
         cancelButton.dispatchEvent(new CustomEvent('click'));
           
         return Promise.resolve().then(() => {
-            const cancelAllButton = CancelCaseElement.shadowRoot.querySelector('[data-id="cancelButton"]');
+            const cancelAllButton = CancelCaseElement.shadowRoot.querySelector('[data-id="cancelAllButton"]');
             cancelAllButton.dispatchEvent(new CustomEvent('click'));
             
             return Promise.resolve().then(() => {
-                expect(doCheckIn).toHaveBeenCalled()
+                expect(toastEventHandler).toHaveBeenCalled();
+                return Promise.resolve().then(() => {
+                    cancelButton = CancelCaseElement.shadowRoot.querySelector('[data-id="cancelButton"]');
+                    expect(cancelButton.disabled).toBe(true);
+                })
+            })
+
+        });
+    
+    })
+
+    test('Confirm Cancel All Cases Fail', () => {
+        const CancelCaseElement = createElement('c-pc-cancel-case-utility', {
+            is: CancelCase
+        });
+
+        const toastEventHandler = jest.fn()
+        // add the event listener to the component
+        CancelCaseElement.addEventListener('lightning__showtoast', toastEventHandler)
+        
+        document.body.appendChild(CancelCaseElement);
+
+        let textElement = CancelCaseElement.shadowRoot.querySelector('[data-id="cancelReason"]');
+
+        textElement.value = 'test reason';
+        textElement.dispatchEvent(new CustomEvent('change'));
+
+        let cancelButton = CancelCaseElement.shadowRoot.querySelector('[data-id="cancelButton"]');
+        const mockSuccess = require("./data/cancelCasesEmptyMock.json");
+
+        cancelOpenCases.mockResolvedValue(mockSuccess);
+        cancelButton.dispatchEvent(new CustomEvent('click'));
+          
+        return Promise.resolve().then(() => {
+            const cancelAllButton = CancelCaseElement.shadowRoot.querySelector('[data-id="cancelAllButton"]');
+            cancelAllButton.dispatchEvent(new CustomEvent('click'));
+            
+            return Promise.resolve().then(() => {
+                expect(toastEventHandler).toHaveBeenCalled();
+
+                return Promise.resolve().then(() => {
+                    cancelButton = CancelCaseElement.shadowRoot.querySelector('[data-id="cancelButton"]');
+                    expect(cancelButton.disabled).toBe(false);
+                })
             })
 
         });

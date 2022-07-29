@@ -1,0 +1,22 @@
+[
+    {
+        "Id": "5003S000003XnlQQAS",
+        "CaseNumber": "00006347",
+        "CreatedDate": "2022-07-14T14:40:13.000+0000",
+        "PC_Specialty__c": "Cardiology",
+        "PC_Channel__c": "Chat",
+        "Owner": {
+            "Name": "George Elias"
+        }
+    },
+    {
+        "Id": "5003S000003XnlQQAB",
+        "CaseNumber": "00006346",
+        "CreatedDate": "2022-07-13T14:40:13.000+0000",
+        "PC_Specialty__c": "Cardiology",
+        "PC_Channel__c": "Chat",
+        "Owner": {
+            "Name": "George Elias"
+        }
+    }
+]

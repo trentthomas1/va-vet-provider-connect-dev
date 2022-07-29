@@ -1,0 +1,18 @@
+{
+  "chatList": [
+    {
+      "ParentId": "a293S00000057z0QAA",
+      "InsertedById": "0053d000001Ew3pAAC",
+      "Id": "0D53S000004t2DkSAI",
+      "CreatedDate": "2022-07-14T15:32:59.000Z",
+      "IsRichText": false,
+      "Body": "Test 1",
+      "Type": "TextPost",
+      "InsertedBy": {
+        "Name": "George Elias",
+        "Id": "0053d000001Ew3pAAC"
+      }
+    }
+  ],
+  "isClosed": false
+}
