@@ -1,5 +1,5 @@
 /**
- * @description       : Test class for PC_ProviderConnectController
+ * @description       : Test class for PC_SurveyController
  * @author            : George Elias
  * @group             : Booze Allen Hamilton
  * @last modified on  : 07-06-2022
@@ -20,7 +20,8 @@ public class PC_SurveyControllerTest {
     static void makeData(){
         User admin = [SELECT Id FROM User WHERE Profile.Name = 'System Administrator' AND IsActive = true limit 1];
         List<String> channels = new List<String>{'Chat', 'Teams', 'Phone'};
-        for(Skill s : [SELECT Id, MasterLabel FROM Skill WHERE MasterLabel NOT in :channels limit 5]) {
+        List<String> skills = new List<String> {'PC_Cardiology', 'PC_Chart_Consult', 'PC_Dental', 'PC_Audiology', 'PC_Dermatology'};
+        for(Skill s : [SELECT Id, MasterLabel FROM Skill WHERE MasterLabel NOT in :channels AND DeveloperName in :skills limit 5]) {
             User pcSpecialist = new User();
             User pcProvider = new User();
             System.runAs(admin){

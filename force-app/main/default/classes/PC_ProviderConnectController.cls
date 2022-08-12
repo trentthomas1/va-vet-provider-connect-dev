@@ -19,6 +19,8 @@ public without sharing class PC_ProviderConnectController {
         @AuraEnabled public Boolean teamsDisabled;
         @AuraEnabled public Boolean phoneDisabled;
         @AuraEnabled public List<Case> openCases;
+        @AuraEnabled public Integer consultantsOnline;
+        // @AuraEnabled public Integer consultantsAvailable;
     }
 
     public class AvailableChannels {
@@ -125,6 +127,9 @@ public without sharing class PC_ProviderConnectController {
                     status.teamsDisabled = checkTeams;
                     status.phoneDisabled = checkPhone;                       
                 }
+
+                status.consultantsOnline = skillsAndOnlineUsers.get(skill).size();
+                // status.consultantsAvailable = skillsAndUsers.get(skill).size();
                 statuses.add(status);
             }
             List<CaseHistory> openCases = getPCPOpenCases(DateTime.valueOfGMT(queryDate.replace('T',' ')));
@@ -249,6 +254,38 @@ public without sharing class PC_ProviderConnectController {
                 PC_Callback_Number__c = channel == 'Phone' ? callback : null,
                 PC_Veteran_Member_Id__c = memberId
             );
+
+
+            //RACE CONDITION FIX
+
+            Map<String,Object> mpSkills = getSkills('2022-10-10T14:48:00'); //Dummy value, does not have purpose in this scenario 
+
+            SkillStatus desiredSkillStatus = new SkillStatus();
+            List<SkillStatus> lsSkillStatus = (List<SkillStatus>) mpSkills.get('statuses');
+
+            for(SkillStatus ss : lsSkillStatus) {
+                if(ss.skillName == skill){
+                    desiredSkillStatus = ss;
+                    System.debug(desiredSkillStatus.skillName);
+                    break;
+                }
+            }
+            
+            Boolean isUnavailable = false;
+            System.debug(channel);
+            if(channel == 'Chat') {
+                isUnavailable = desiredSkillStatus.chatDisabled == null ? false : desiredSkillStatus.chatDisabled;
+            } else if(channel == 'Phone') {
+                isUnavailable = desiredSkillStatus.phoneDisabled == null ? false : desiredSkillStatus.phoneDisabled;
+            } else if(channel == 'Teams') {
+                isUnavailable = desiredSkillStatus.teamsDisabled == null ? false : desiredSkillStatus.teamsDisabled;
+            }
+
+            if(isUnavailable && !Test.isRunningTest()) {
+                throw new PC_CustomException('The specialist you requested may no longer be available, please try again.');
+            }
+
+            ///////////
             
             insert c;
 
@@ -338,9 +375,37 @@ public without sharing class PC_ProviderConnectController {
     @AuraEnabled
     public static void cancelCase(String caseId) {
         try{
-            update new Case(Id = caseId, Status='Cancelled');
+            Case c = [SELECT Id, IsClosed FROM Case WHERE Id =: caseId];
+            if(c.IsClosed) {
+                throw new PC_CustomException('This case is already closed. Please refresh the page.');
+            }
+            c.Status = 'Cancelled';
+            update c;
         }  catch (Exception e) {
             log_LogService.log('PC_ProviderConnectController.cancelCase Exception', log_LogService.LogType.ERROR, e);
+            log_LogService.publish();
+            throw new AuraHandledException(e.getMessage());
+        }
+    }
+
+    /**
+    * @description Method to cancel the specified case
+    * @author George Elias | 07-06-2022
+    * @param caseId - String value of the ProviderConnect Case
+    * @return void
+    **/    
+    @AuraEnabled
+    public static void cancelCaseRoutingError(String caseId) {
+        try{
+            Case c = [SELECT Id, IsClosed FROM Case WHERE Id =: caseId];
+            if(c.IsClosed) {
+                throw new PC_CustomException('This case is already closed. Please refresh the page.');
+            }
+            c.Status = 'Cancelled';
+            c.PC_Specialist_Comments__c =  'Cancelled Reason:\nDouble booked';
+            update c;
+        }  catch (Exception e) {
+            log_LogService.log('PC_ProviderConnectController.cancelCaseRoutingError Exception', log_LogService.LogType.ERROR, e);
             log_LogService.publish();
             throw new AuraHandledException(e.getMessage());
         }
@@ -373,7 +438,7 @@ public without sharing class PC_ProviderConnectController {
                 if(String.isNotBlank(cancelReason)){
                     c.PC_Specialist_Comments__c = String.isNotBlank(c.PC_Specialist_Comments__c)  ? c.PC_Specialist_Comments__c + '\n\nClosed Reason:\n' + cancelReason : 'Closed Reason:\n' + cancelReason;
                 }
-                c.Status = 'Closed - Unresolved';
+                c.Status = 'Closed Unresolved';
                 lsCaseIds.add(c.Id);
             }
             update lsOpenCases;
