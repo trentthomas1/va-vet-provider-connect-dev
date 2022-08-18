@@ -18,9 +18,17 @@ public class PC_ChatSessionTriggerHelperTest {
     **/
     @TestSetup
     static void makeData(){
-        Case c = PC_ProviderConnectController.createCase('Cardiology', 'Test Details', '987654321', 'Chat', '1234567890');
-        PC_Chat_Session__c chatSession = [SELECT Id FROM PC_Chat_Session__c LIMIT 1];
-        PC_ChatController.saveChatterMessage(chatSession.Id, 'Test');
+        User admin = [SELECT Id FROM User WHERE Profile.Name = 'System Administrator' AND IsActive = true limit 1];
+        System.runAs(admin) {
+            PC_TestDataFactory.createProvider('Test PC Provider');
+        }
+        User pcProvider = [SELECT Id FROM User WHERE LastName = 'Test PC Provider'];
+
+        System.runAs(pcProvider) {
+            Case c = PC_ProviderConnectController.createCase('Cardiology', 'Test Details', '987654321', 'Chat', '1234567890');
+            PC_Chat_Session__c chatSession = [SELECT Id FROM PC_Chat_Session__c LIMIT 1];
+            PC_ChatController.saveChatterMessage(chatSession.Id, 'Test');
+        }
     }
 
     /**
@@ -45,7 +53,7 @@ public class PC_ChatSessionTriggerHelperTest {
     @isTest
     public static void clearSessionCacheDataTestNegative() {
         try {
-            PC_ChatSessionTriggerHelper.clearSessionCacheData(new List<PC_Chat_Session__c>{new PC_Chat_Session__c()});
+            PC_ChatSessionTriggerHelper.clearSessionCacheData(new List<PC_Chat_Session__c>{new PC_Chat_Session__c( Id = null)});
             System.assert(false);
         } catch(Exception e) {
             System.assert(true);

@@ -62,7 +62,6 @@ describe('c-pc-chat', () => {
 
         return flushPromises().then(() => {
             const messages = ChatElement.shadowRoot.querySelectorAll('lightning-formatted-rich-text');
-            console.log(messages);
             expect(messages.length).toBe(2);
         })
     });

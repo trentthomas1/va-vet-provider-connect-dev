@@ -55,11 +55,20 @@ export default class PcCancelCase extends LightningElement {
 
             })
             .catch(error => {
+                let variant = ''
+                let title = ''
+                if(error.body && error.body.message.includes('This case is already closed.')){
+                    variant = 'warning'
+                    title = 'Case Closed'
+                } else {
+                    variant = 'error'
+                    title = 'Error Cancelling Case'
+                }
                 this.dispatchEvent(
                     new ShowToastEvent({
-                        title: 'Error Cancelling Case',
+                        title: title,
                         message: error.body ? error.body.message : error.message,
-                        variant: 'error'
+                        variant: variant
                     })
                 );
             })

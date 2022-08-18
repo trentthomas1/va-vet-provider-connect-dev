@@ -23,15 +23,16 @@
 			<div class="slds-grid slds-wrap">
 				<div class="slds-size_1-of-2 slds-p-left_xx-small">
 					<p class="slds-text-heading_small slds-text-align_center slds-p-bottom_x-small">
-						Select a button for Speciality and Channel
+						Select a button for Speciality and Channel <lightning-helptext content="Number after specialty denotes number of consultants online"></lightning-helptext>
 					</p>
 					<table width="100%">
 						<template for:each={skillsAndButtons} for:item="skill">
 							<tr key={skill.skillName}>
-								<th class="slds-text-align_left slds-truncate">
+								<th scope='row' class="slds-text-align_left slds-truncate">
 									<strong>
 										<lightning-formatted-text value={skill.skillName} class={skill.skillNameFormat}>
 										</lightning-formatted-text>
+										<span class={skill.skillNameFormat} style='font-size: 12px; font-weight: 400; margin-bottom:10px;'> - {skill.consultantsOnline}</span>
 									</strong>
 								</th>
 								<td class="slds-var-p-vertical_xxx-small">
@@ -94,10 +95,6 @@
 				<header class="slds-modal__header">
 					<button class="slds-button slds-button_icon slds-modal__close slds-button_icon-inverse"
 						title="Close" onclick={handleCloseModal}>
-						<!-- <svg class="slds-button__icon slds-button__icon_large" aria-hidden="true">
-                    <use xlink:href="/assets/icons/utility-sprite/svg/symbols.svg#close"></use>
-                </svg> -->
-						<!-- <lightning-icon icon-name="utility:close" alternative-text="Close" title="Close"></lightning-icon> -->
 						X
 						<span class="slds-assistive-text">Close</span>
 					</button>
@@ -135,13 +132,8 @@
 						<div>This case has been {currentClosedCase.status} by {currentClosedCase.CreatedBy.Name}. <a data-id={currentClosedCase.CaseId} onclick={navigateToCase}>View Case</a> </div>
 					</div>
 					<div class="card">
-						<!-- <div if:false={currentClosedCase.Id} style="text-align: right;">
-							<a class="slds-text-color_destructive" onclick={openConfirmCancel}>Cancel Case</a>
-						</div> -->
 						<template if:true={isTeams}>
 							<div style="text-align: center;">
-								<!-- <button class='slds-button launch-teams' onclick={launchTeamsVideo}>Launch Teams
-								Video</button> -->
 								<p style='font-size: large;'>Redirecting to Teams video call in <b>{countdownInt}</b>&nbsp;seconds.</p>
 								<a class="launch-now" onclick={handleLaunchNow}>Launch Now</a>
 							</div>
@@ -167,10 +159,7 @@
 									<div class="slds-col slds-size_2-of-3" style="text-align: left;">
 										<p>{agent.Title}</p>
 										<p>{agent.Department}</p>
-										<!-- <p>{agent.Division}</p> -->
-										<!-- <p>{agent.Street}</p> -->
 										<p>{agent.City}, {agent.State}</p>
-										<!-- <p>{agent.PostalCode}</p> -->
 									</div>
 								</div>
 						</div>
@@ -201,9 +190,6 @@
 					<div if:true={currentClosedCase.Id} class="slds-m-bottom_small slds-card case-closed">
 						<div>This case has been {currentClosedCase.status} by {currentClosedCase.CreatedBy.Name}. <a data-id={currentClosedCase.CaseId} onclick={navigateToCase}>View Case</a> </div>
 					</div>
-					<!-- <div if:false={currentClosedCase.Id} style="text-align: right;">
-						<a class="slds-text-color_destructive" onclick={openConfirmCancel}>Cancel Case</a>
-					</div> -->
 					<div class="slds-grid">
 						<div class="slds-col">
 							<div>

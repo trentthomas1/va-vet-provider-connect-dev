@@ -26,6 +26,8 @@ public with sharing class PC_SurveyController {
             Id specialistRTId = Schema.SObjectType.PC_Survey__c.getRecordTypeInfosByDeveloperName().get('Specialist_Survey').getRecordTypeId();
             
             Id rtId = null;
+
+            //Cannot grant profile access to platform PCP users, this apex class is secured by permission set for PC users only
             Profile p = [SELECT Name FROM Profile WHERE Id = : UserInfo.getProfileId()];
             if (p.name.contains('Platform')){
                 rtId = providerRTId;
@@ -33,7 +35,9 @@ public with sharing class PC_SurveyController {
                 rtId = specialistRTId;
             }
 
-            List<PC_Survey__c> lsSurvey = [SELECT Id, PC_Was_this_session_useful__c, RecordTypeId FROM PC_Survey__c WHERE PC_Case__c = :caseId AND RecordTypeId = :rtId ORDER BY CreatedDate];
+            List<PC_Survey__c> lsSurvey = [SELECT Id, PC_Was_this_session_useful__c, RecordTypeId FROM PC_Survey__c WHERE PC_Case__c = :caseId AND RecordTypeId = :rtId
+             WITH SECURITY_ENFORCED
+            ORDER BY CreatedDate];
 
             PC_Survey__c returnSurvey = new PC_Survey__c(RecordTypeId = rtId, PC_Was_this_session_useful__c = '0', PC_Case__c = caseId);
 
@@ -58,7 +62,11 @@ public with sharing class PC_SurveyController {
     @AuraEnabled
     public static void saveSurvey(PC_Survey__c survey){
         try{
-            upsert survey;
+            if (Schema.sObjectType.PC_Survey__c.isUpdateable()) {
+                upsert survey;
+            } else {
+                throw new PC_CustomException('You do not have the proper permissions to create and update surveys.');
+            }
         } catch (Exception e) {
             log_LogService.log('PC_SurveyController.saveSurvey Exception', log_LogService.LogType.ERROR, e);
             log_LogService.publish();
@@ -78,6 +86,7 @@ public with sharing class PC_SurveyController {
                 FROM CASE 
                 WHERE RecordType.DeveloperName = 'PC_Case'
                 AND PC_Survey_Created__c excludes ('PCP Survey')
+                WITH SECURITY_ENFORCED
                 ORDER BY CaseNumber DESC
                 LIMIT 20];
     }

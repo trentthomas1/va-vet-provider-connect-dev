@@ -1,5 +1,5 @@
 /**
- * @description       : Test class for PC_ChatSessionTriggerHelper
+ * @description       : Test class for PC_ManagerController
  * @author            : George Elias
  * @group             : Booze Allen Hamilton
  * @last modified on  : 07-06-2022
@@ -19,7 +19,8 @@ public class PC_ManagerController_Test {
     static void makeData(){
         User admin = [SELECT Id FROM User WHERE Profile.Name = 'System Administrator' AND IsActive = true limit 1];
         List<String> channels = new List<String>{'Chat', 'Teams', 'Phone'};
-        for(Skill s : [SELECT Id, MasterLabel FROM Skill WHERE MasterLabel NOT in :channels limit 5]) {
+        List<String> skills = new List<String> {'PC_Cardiology', 'PC_Chart_Consult', 'PC_Dental', 'PC_Audiology', 'PC_Dermatology'};
+        for(Skill s : [SELECT Id, MasterLabel FROM Skill WHERE MasterLabel NOT in :channels AND DeveloperName in :skills limit 5]) {
             User pcManager = new User();
 
             System.runAs(admin){
@@ -42,19 +43,24 @@ public class PC_ManagerController_Test {
         UserServicePresence usp = new UserServicePresence(UserId = manager.Id, ServicePresenceStatusId = sps.Id);
         insert usp;
 
-        Case cOpen = PC_ProviderConnectController.createCase('Cardiology', 'Test Details', '987654321', 'Chat', '1234567890');
-        Case cClosed = PC_ProviderConnectController.createCase('Cardiology', 'Test Details', '987654321', 'Chat', '1234567890');
+        System.runAs(manager) {
+            Case cOpen = PC_ProviderConnectController.createCase('Cardiology', 'Test Details', '987654321', 'Chat', '1234567890');
+            Case cClosed = PC_ProviderConnectController.createCase('Cardiology', 'Test Details', '987654321', 'Chat', '1234567890');
+        }
         
-        PC_TestDataFactory.mockCaseCriteriaSharing(new List<Case> {cOpen, cClosed}, manager.Id);
+        
+            PC_TestDataFactory.mockCaseCriteriaSharing([SELECT Id, CreatedById FROM Case], manager.Id);
 
-        Id pcRtId = Schema.SObjectType.ServiceResource.getRecordTypeInfosByName().get('Provider Connect Resource').getRecordTypeId();
-        PC_TestDataFactory.mockResourceCriteriaSharing([SELECT Id, CreatedById FROM ServiceResource WHERE RecordTypeId = :pcRtId], manager.Id);
-        
-        cOpen.OwnerId = manager.Id;
-        cClosed.OwnerId = manager.Id;
-        cClosed.Status = 'Closed - Resolved';
-        update cOpen;
-        update cClosed;  
+            Id pcRtId = Schema.SObjectType.ServiceResource.getRecordTypeInfosByName().get('Provider Connect Resource').getRecordTypeId();
+            PC_TestDataFactory.mockResourceCriteriaSharing([SELECT Id, CreatedById FROM ServiceResource WHERE RecordTypeId = :pcRtId], manager.Id);
+
+        System.runAs(manager) {
+            List<Case> lsCase = [SELECT Id FROM Case];
+            lsCase[0].OwnerId = manager.Id;
+            lsCase[1].OwnerId = manager.Id;
+            lsCase[1].Status = 'Closed Resolved';
+            update lsCase; 
+        }
     }
 
     /**

@@ -20,7 +20,8 @@ public class PC_ProviderConnectController_Test {
     static void makeData(){
         User admin = [SELECT Id FROM User WHERE Profile.Name = 'System Administrator' AND IsActive = true limit 1];
         List<String> channels = new List<String>{'Chat', 'Teams', 'Phone'};
-        for(Skill s : [SELECT Id, MasterLabel FROM Skill WHERE MasterLabel NOT in :channels limit 5]) {
+        List<String> skills = new List<String> {'PC_Cardiology', 'PC_Chart_Consult', 'PC_Dental', 'PC_Audiology', 'PC_Dermatology'};
+        for(Skill s : [SELECT Id, MasterLabel FROM Skill WHERE MasterLabel NOT in :channels AND DeveloperName in :skills limit 5]) {
             User pcSpecialist = new User();
             User pcProvider = new User();
             System.runAs(admin){
@@ -134,11 +135,15 @@ public class PC_ProviderConnectController_Test {
     **/
     @isTest
     static void createCaseTestPositive(){
+        User provider = [SELECT Id FROM User WHERE LastName = 'Test PC Provider' LIMIT 1];
+
+        System.runAs(provider) {
         Case c = PC_ProviderConnectController.createCase('Cardiology', 'Test Details', '987654321', 'Chat', '1234567890');
 
         List<Case> lsCase = [SELECT Id FROM Case];
 
         System.assertEquals(1, lsCase.size());
+        }
     }
 
     /**
@@ -148,12 +153,16 @@ public class PC_ProviderConnectController_Test {
     **/
     @isTest
     static void createCaseTestNegative(){
+        User provider = [SELECT Id FROM User WHERE LastName = 'Test PC Provider' LIMIT 1];
+
+        System.runAs(provider) {
         try {
             Case c = PC_ProviderConnectController.createCase('Test', 'Test', 'Test', 'Test', 'Test');
             System.assert(false);
         } catch(Exception e) {
             System.assert(true);
         }
+    }
     }
 
     /**
@@ -163,14 +172,12 @@ public class PC_ProviderConnectController_Test {
     **/
     @isTest
     static void getAgentTestPositive() {
-        Case c = PC_ProviderConnectController.createCase('Cardiology', 'Test Details', '987654321', 'Chat', '1234567890');
         User provider = [SELECT Id FROM User WHERE LastName = 'Test PC Provider' LIMIT 1];
 
         System.runAs(provider) {
-            Test.startTest();
+            Case c = PC_ProviderConnectController.createCase('Cardiology', 'Test Details', '987654321', 'Chat', '1234567890');
             Map<String, Object> results = PC_ProviderConnectController.getAssignedAgent(c.Id);
             System.assert(results != null);
-            Test.stopTest();
         }
     }
 
@@ -181,12 +188,16 @@ public class PC_ProviderConnectController_Test {
     **/
     @isTest
     static void getAgentTestNegative() {
+        User provider = [SELECT Id FROM User WHERE LastName = 'Test PC Provider' LIMIT 1];
+
+        System.runAs(provider) {
        try {
             Map<String, Object> results = PC_ProviderConnectController.getAssignedAgent(null);
             System.assert(false);
         } catch(Exception e) {
             System.assert(true);
         }
+    }
     }
 
 
@@ -216,6 +227,9 @@ public class PC_ProviderConnectController_Test {
     **/
     @isTest
     static void cancelCaseTestNegative() {
+        User provider = [SELECT Id FROM User WHERE LastName = 'Test PC Provider' LIMIT 1];
+
+        System.runAs(provider) {
         try {
             PC_ProviderConnectController.cancelCase(null);
             System.assert(false);
@@ -223,6 +237,47 @@ public class PC_ProviderConnectController_Test {
             System.assert(true);
         }
     }
+    }
+
+
+       /**
+    * @description Method to postively test cancelCaseRoutingError method
+    * @author George Elias | 07-06-2022
+    * @return  void
+    **/
+    @isTest
+    static void cancelCaseRoutingErrorTestPositive() {
+        User provider = [SELECT Id FROM User WHERE LastName = 'Test PC Provider' LIMIT 1];
+        System.runAs(provider) {
+            Case c = PC_ProviderConnectController.createCase('Cardiology', 'Test Details', '987654321', 'Chat', '1234567890');
+            Test.startTest();
+            PC_ProviderConnectController.cancelCaseRoutingError(c.Id);
+            Test.stopTest();
+            c = [SELECT Id, Status FROM Case WHERE Id = :c.Id];
+            System.assertEquals('Cancelled', c.Status);
+        }
+    }
+
+
+    /**
+    * @description Method to negatively test cancelCaseRoutingError method
+    * @author George Elias | 07-06-2022
+    * @return  void
+    **/
+    @isTest
+    static void cancelCaseRoutingErrorTestNegative() {
+        User provider = [SELECT Id FROM User WHERE LastName = 'Test PC Provider' LIMIT 1];
+
+        System.runAs(provider) {
+        try {
+            PC_ProviderConnectController.cancelCaseRoutingError(null);
+            System.assert(false);
+        } catch(Exception e) {
+            System.assert(true);
+        }
+    }
+    }
+
 
 
     /**
