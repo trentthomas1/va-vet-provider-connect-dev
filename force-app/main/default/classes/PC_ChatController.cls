@@ -33,9 +33,10 @@ public with sharing class PC_ChatController {
             PC_Chat_Session__c session = [
                 SELECT Id, CreatedBy.Name, PC_Case__C, CreatedDate, PC_Is_Closed__c, PC_Closed_Date__c, PC_Closed_By__r.Name,
                 (SELECT Body, Type, ParentId, CreatedDate, InsertedBy.Name FROM feeds WHERE type ='TextPost' and CreatedDate > :dt ORDER BY CreatedDate)
-                FROM PC_Chat_Session__c 
-                WHERE Id = :sessionId OR PC_Case__c = :caseId
+                FROM PC_Chat_Session__c
+                WHERE Id = :sessionId OR PC_Case__c = :caseId //Cannot use security enforced with InsertedBy field, Apex Class is secured with permission set for PC users only
                 LIMIT 1];
+
             return session;
         } catch (Exception e) {
             log_LogService.log('PC_ChatController.getChatterMessages Exception', log_LogService.LogType.ERROR, e);
@@ -80,18 +81,13 @@ public with sharing class PC_ChatController {
                 PC_Chat_Session__c session = [
                 SELECT PC_Is_Closed__c, PC_Closed_Date__c, PC_Closed_By__r.Name
                 FROM PC_Chat_Session__c 
-                WHERE Id = :sessionId
+                WHERE Id = :sessionId WITH SECURITY_ENFORCED
                 LIMIT 1];
 
                 cacheResults.isClosed = session.PC_Is_Closed__c;
                 cacheResults.closedBy = session.PC_Closed_By__r?.Name;
                 cacheResults.closedDate = session.PC_Closed_Date__c;
-                cacheResults.chatList = [
-                    SELECT Body, Type, ParentId, CreatedDate, InsertedBy.Name 
-                    FROM FeedItem 
-                    WHERE ParentId = :sessionId 
-                    AND type ='TextPost' and CreatedDate > :dt 
-                    ORDER BY CreatedDate];
+                cacheResults.chatList = PC_ChatControllerHelper.queryFeedItem(sessionId, dt);
             }
             return cacheResults;
         }catch (Exception e) {
@@ -121,13 +117,22 @@ public with sharing class PC_ChatController {
 
 
             FeedItem chat = new FeedItem(ParentId=sessionId, Type='TextPost', Body=message, IsRichText = false, NetworkScope='AllNetworks', Visibility='InternalUsers', Status='Published');
-            insert chat;
 
-            //Update PC_Last_Chat_Date__c which is then used in a flow to auto close a session 20 minutes after the last chat
-            update new PC_Chat_Session__c(Id = sessionId, PC_Last_Chat_Date__c = System.now());
+            if (Schema.sObjectType.FeedItem.isCreateable()) {
+                insert chat;
+            } else {
+                throw new PC_CustomException('You do not have the proper permissions to create a chat message.');
+            }
+
+            if (Schema.sObjectType.PC_Chat_Session__c.isUpdateable()) {
+                //Update PC_Last_Chat_Date__c which is then used in a flow to auto close a session 20 minutes after the last chat
+                update new PC_Chat_Session__c(Id = sessionId, PC_Last_Chat_Date__c = System.now());
+            } else {
+                throw new PC_CustomException('You do not have the proper permissions to update the chat session.');
+            }
 
             //
-            chat = [SELECT Body, Type, ParentId, CreatedDate, InsertedBy.Name FROM FeedItem WHERE Id = :chat.Id];
+            chat = [SELECT Body, Type, ParentId, CreatedDate, InsertedBy.Name FROM FeedItem WHERE Id = :chat.Id]; //Cannot use security enforced with InsertedBy field
             //Check if cache exists
             Cache.OrgPartition orgPart = Cache.Org.getPartition('local.pcChat');
             PC_CacheResults cacheResult = new PC_CacheResults();
@@ -143,7 +148,7 @@ public with sharing class PC_ChatController {
                 PC_Chat_Session__c session = [
                 SELECT PC_Is_Closed__c, PC_Closed_Date__c, PC_Closed_By__r.Name
                 FROM PC_Chat_Session__c 
-                WHERE Id = :sessionId
+                WHERE Id = :sessionId WITH SECURITY_ENFORCED
                 LIMIT 1];
                 
                 cacheResult.isClosed = session.PC_Is_Closed__c;
@@ -173,7 +178,7 @@ public with sharing class PC_ChatController {
             if(String.isBlank(sessionId)) {
                 throw new PC_CustomException('Session Id cannot be blank.');
             }
-            PC_Chat_Session__c session = [SELECT PC_Is_Closed__c FROM PC_Chat_Session__c WHERE Id = : sessionId];
+            PC_Chat_Session__c session = [SELECT PC_Is_Closed__c FROM PC_Chat_Session__c WHERE Id = : sessionId WITH SECURITY_ENFORCED];
             if(session.PC_Is_Closed__c == false){
                 update new PC_Chat_Session__c(
                     Id = sessionId, 
@@ -185,7 +190,7 @@ public with sharing class PC_ChatController {
             return [
                 SELECT Id, CreatedBy.Name, PC_Case__C, CreatedDate, PC_Is_Closed__c, PC_Closed_Date__c, PC_Closed_By__r.Name
                 FROM PC_Chat_Session__c 
-                WHERE Id = :sessionId
+                WHERE Id = :sessionId WITH SECURITY_ENFORCED
                 LIMIT 1];
         } catch(Exception e) {
             log_LogService.log('PC_ChatController.closeChatSession Exception', log_LogService.LogType.ERROR, e);

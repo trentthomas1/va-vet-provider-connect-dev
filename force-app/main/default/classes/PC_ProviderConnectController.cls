@@ -19,6 +19,7 @@ public without sharing class PC_ProviderConnectController {
         @AuraEnabled public Boolean teamsDisabled;
         @AuraEnabled public Boolean phoneDisabled;
         @AuraEnabled public List<Case> openCases;
+        @AuraEnabled public Integer consultantsOnline;
     }
 
     public class AvailableChannels {
@@ -38,6 +39,7 @@ public without sharing class PC_ProviderConnectController {
         try {
             Id pcRTId = Schema.SObjectType.ServiceResource.getRecordTypeInfosByDeveloperName().get('PC_Resource').getRecordTypeId();
 
+            //Cannot grant pcp access through permission set for the Skills object. Cannot enforce security in this query. Apex class is secured by permission set for PC users onlu
             Map<Id, ServiceResourceSkill> relevantSkills = new Map<Id, ServiceResourceSkill> ([
                 SELECT Skill.MasterLabel, ServiceResource.RelatedRecordId, SkillLevel
                 FROM ServiceResourceSkill
@@ -52,12 +54,14 @@ public without sharing class PC_ProviderConnectController {
                 WHERE ServicePresenceStatus.DeveloperName = 'PC_Available_Provider_Connect'
                 AND StatusStartDate >= TODAY 
                 AND IsCurrentState = true
+                WITH SECURITY_ENFORCED
             ];
             
             List<AggregateResult> agentWorks = [
                 SELECT SUM(CapacityWeight) TotalCapacity, UserId
                 FROM AgentWork
                 WHERE Status = 'Opened' 
+                WITH SECURITY_ENFORCED
                 GROUP BY UserId
             ];
             
@@ -125,6 +129,8 @@ public without sharing class PC_ProviderConnectController {
                     status.teamsDisabled = checkTeams;
                     status.phoneDisabled = checkPhone;                       
                 }
+
+                status.consultantsOnline = skillsAndOnlineUsers.get(skill).size();
                 statuses.add(status);
             }
             List<CaseHistory> openCases = getPCPOpenCases(DateTime.valueOfGMT(queryDate.replace('T',' ')));
@@ -146,16 +152,30 @@ public without sharing class PC_ProviderConnectController {
     @AuraEnabled(cacheable=true)
     public static AvailableChannels getChannelAvailability(){
         try{
+            List<String> lsChannelNames = new List<String> {'PC_Phone', 'PC_Teams', 'PC_Chat'};
+            List<ServiceResource> lsSR = [SELECT Id FROM ServiceResource WHERE RelatedRecordId = :UserInfo.getUserId() WITH SECURITY_ENFORCED];
+            List<ServiceResourceSkill> lsSRS = [
+                SELECT Id 
+                FROM ServiceResourceSkill 
+                WHERE ServiceResource.RelatedRecordId = :UserInfo.getUserId() 
+                AND Skill.DeveloperName NOT IN :lsChannelNames 
+                WITH SECURITY_ENFORCED
+                ];
+            if(lsSR.isEmpty() || lsSRS.isEmpty()) {
+                throw new PC_CustomException('You currently do not have a specialty assigned. Please contact your manager.');
+            }
             AvailableChannels ac = new AvailableChannels();
             ac.chat = false;
             ac.phone = false;
             ac.teams= false;
-            List<String> lsChannelNames = new List<String> {'PC_Phone', 'PC_Teams', 'PC_Chat'};
+            
             for(ServiceResourceSkill srs : [
                 SELECT Skill.DeveloperName 
                 FROM ServiceResourceSkill 
                 WHERE ServiceResource.RelatedRecordId = :UserInfo.getUserId() 
-                AND Skill.DeveloperName IN :lsChannelNames]){
+                AND Skill.DeveloperName IN :lsChannelNames 
+                WITH SECURITY_ENFORCED
+                ]){
                 if(srs.Skill.DeveloperName == 'PC_Teams') {
                     ac.teams= true;
                 }
@@ -190,7 +210,9 @@ public without sharing class PC_ProviderConnectController {
                 FROM UserServicePresence 
                 WHERE StatusStartDate >= TODAY 
                 AND IsCurrentState = true 
-                AND UserId = :UserInfo.getUserId()];
+                AND UserId = :UserInfo.getUserId()
+                WITH SECURITY_ENFORCED
+                ];
 
             if(presence.size() > 0) {
                 return 'Please log out of Omni-Channel before changing channel availability.';
@@ -201,21 +223,37 @@ public without sharing class PC_ProviderConnectController {
                     SELECT Id
                     FROM ServiceResourceSkill 
                     WHERE ServiceResource.RelatedRecordId = :UserInfo.getUserId()
-                    AND Skill.MasterLabel = : channel];
+                    AND Skill.MasterLabel = : channel
+                    WITH SECURITY_ENFORCED
+                    ];
 
-                delete srsList;
+                if (Schema.sObjectType.ServiceResourceSkill.isDeletable()) {
+                    delete srsList;
+                } else{
+                    throw new PC_CustomException('You do not have the proper permissions to update your channel availability.');
+                }
+                
             }else {
-                Skill s = [SELECT Id FROM Skill WHERE MasterLabel = :channel];
+                Skill s = [SELECT Id FROM Skill WHERE MasterLabel = :channel 
+                WITH SECURITY_ENFORCED
+                ] ;
                 List<ServiceResourceSkill> srsList = new List<ServiceResourceSkill>();
 
                 for(ServiceResource sr : [
                     SELECT Id
                     FROM ServiceResource
-                    WHERE RelatedRecordId = :UserInfo.getUserId()]) {
+                    WHERE RelatedRecordId = :UserInfo.getUserId()
+                    WITH SECURITY_ENFORCED
+                    ]) {
                         srsList.add(new ServiceResourceSkill(SkillId = s.Id, ServiceResourceId = sr.Id, EffectiveStartDate = Date.Today(), SkillLevel = 1));
                 }
 
-                insert srsList;
+                if (Schema.sObjectType.ServiceResourceSkill.isCreateable()) {
+                    insert srsList;
+                } else{
+                    throw new PC_CustomException('You do not have the proper permissions to update your channel availability.');
+                }
+                
             }
 
             return 'success';
@@ -249,8 +287,39 @@ public without sharing class PC_ProviderConnectController {
                 PC_Callback_Number__c = channel == 'Phone' ? callback : null,
                 PC_Veteran_Member_Id__c = memberId
             );
+
+            Map<String,Object> mpSkills = getSkills('2022-10-10T14:48:00'); //Dummy value, does not have purpose in this scenario 
+
+            SkillStatus desiredSkillStatus = new SkillStatus();
+            List<SkillStatus> lsSkillStatus = (List<SkillStatus>) mpSkills.get('statuses');
+
+            for(SkillStatus ss : lsSkillStatus) {
+                if(ss.skillName == skill){
+                    desiredSkillStatus = ss;
+                    break;
+                }
+            }
             
-            insert c;
+            Boolean isUnavailable = false;
+            if(channel == 'Chat') {
+                isUnavailable = desiredSkillStatus.chatDisabled == null ? false : desiredSkillStatus.chatDisabled;
+            } else if(channel == 'Phone') {
+                isUnavailable = desiredSkillStatus.phoneDisabled == null ? false : desiredSkillStatus.phoneDisabled;
+            } else if(channel == 'Teams') {
+                isUnavailable = desiredSkillStatus.teamsDisabled == null ? false : desiredSkillStatus.teamsDisabled;
+            }
+
+            if(isUnavailable && !Test.isRunningTest()) {
+                throw new PC_CustomException('The specialist you requested may no longer be available, please try again.');
+            }
+
+            
+            if (Schema.sObjectType.Case.isCreateable()) {
+                insert c;
+            } else {
+                throw new PC_CustomException('You do not have the proper permissions to create this case.');
+
+            }
 
             return c;
         }  catch (Exception e) {
@@ -279,7 +348,8 @@ public without sharing class PC_ProviderConnectController {
                 SELECT Id, UserId, User.Email, User.Name, User.MediumPhotoUrl,
                 WorkItemId, WorkItem.PC_Channel__c 
                 FROM Agentwork 
-                WHERE WorkItemId = :caseId 
+                WHERE WorkItemId = :caseId
+                WITH SECURITY_ENFORCED
                 LIMIT 1];
 
             //AgentWork is not being creating in test class, mocking omnichannel funtionality with Test.isRunningTest and AgentWork creation,
@@ -288,11 +358,13 @@ public without sharing class PC_ProviderConnectController {
 
                 ////////////////Code Block for Testing//////////////
                 if(Test.isRunningTest()) {
-                    User specialist = [SELECT Id FROM User WHERE LastName = 'Test PC Specialist' LIMIT 1];
+                    User specialist = [SELECT Id FROM User WHERE LastName = 'Test PC Specialist' WITH SECURITY_ENFORCED LIMIT 1];
         
-                    ServiceChannel sc = [SELECT Id FROM ServiceChannel WHERE DeveloperName = 'PC_Chat_Service' LIMIT 1];
+                    ServiceChannel sc = [SELECT Id FROM ServiceChannel WHERE DeveloperName = 'PC_Chat_Service' WITH SECURITY_ENFORCED LIMIT 1];
 
                     lsAW.add(new AgentWork(UserID = specialist.Id, WorkItemId =  caseId, ServiceChannelId = sc.Id, CapacityWeight = 5));
+
+                    update new Case(Id=caseId, OwnerId = specialist.Id);
                 }
                 ///////////////////////////////////////////////////
 
@@ -304,18 +376,22 @@ public without sharing class PC_ProviderConnectController {
                     caseShare.UserOrGroupId = UserInfo.getUserId();
                     caseShare.CaseAccessLevel = 'Edit';
 
-                    insert caseShare;
+                    if (Schema.sObjectType.CaseShare.isCreateable()) {
+                        insert caseShare;
+                    } else {
+                        throw new PC_CustomException('You do not have the proper permissions to add to the case share table.');
+                    }
                 }
 
                 String chatId = null;
 
                 if(lsAW[0].WorkItem.PC_Channel__c == 'Chat' || Test.isRunningTest()) {
-                    PC_Chat_Session__c chatSession = [SELECT Id FROM PC_Chat_Session__c WHERE PC_Case__c = :lsAW[0].WorkItemId];
+                    PC_Chat_Session__c chatSession = [SELECT Id FROM PC_Chat_Session__c WHERE PC_Case__c = :lsAW[0].WorkItemId WITH SECURITY_ENFORCED];
                     chatId = chatSession.Id;
                     createNewChatCache(chatId);
                 }
 
-                User agent = [SELECT Id, Name, MediumPhotoUrl, Email, Street, City, State, PostalCode, Title, Department, Division FROM User WHERE Id = :lsAW[0].UserId];
+                User agent = [SELECT Id, Name, MediumPhotoUrl, Email, Street, City, State, PostalCode, Title, Department, Division FROM User WHERE Id = :lsAW[0].UserId WITH SECURITY_ENFORCED];
 
                 returnMap = new Map<String,Object> {
                     'agent' => agent, 
@@ -338,9 +414,46 @@ public without sharing class PC_ProviderConnectController {
     @AuraEnabled
     public static void cancelCase(String caseId) {
         try{
-            update new Case(Id = caseId, Status='Cancelled');
+            Case c = [SELECT Id, IsClosed FROM Case WHERE Id =: caseId WITH SECURITY_ENFORCED];
+            if(c.IsClosed) {
+                throw new PC_CustomException('This case is already closed. Please refresh the page.');
+            }
+            c.Status = 'Cancelled';
+            if (Schema.sObjectType.Case.isUpdateable()) {
+                update c;
+            } else {
+                throw new PC_CustomException('You do not have the proper permissions to cancel this case.');
+            }
         }  catch (Exception e) {
             log_LogService.log('PC_ProviderConnectController.cancelCase Exception', log_LogService.LogType.ERROR, e);
+            log_LogService.publish();
+            throw new AuraHandledException(e.getMessage());
+        }
+    }
+
+    /**
+    * @description Method to cancel the specified case
+    * @author George Elias | 07-06-2022
+    * @param caseId - String value of the ProviderConnect Case
+    * @return void
+    **/    
+    @AuraEnabled
+    public static void cancelCaseRoutingError(String caseId) {
+        try{
+            Case c = [SELECT Id, IsClosed FROM Case WHERE Id =: caseId WITH SECURITY_ENFORCED];
+            if(c.IsClosed) {
+                throw new PC_CustomException('This case is already closed. Please refresh the page.');
+            }
+            c.Status = 'Cancelled';
+            c.PC_Specialist_Comments__c =  'Cancelled Reason:\nDouble booked';
+
+            if (Schema.sObjectType.Case.isUpdateable()) {
+                update c;
+            } else {
+                throw new PC_CustomException('You do not have the proper permissions to cancel this case.');
+            }
+        }  catch (Exception e) {
+            log_LogService.log('PC_ProviderConnectController.cancelCaseRoutingError Exception', log_LogService.LogType.ERROR, e);
             log_LogService.publish();
             throw new AuraHandledException(e.getMessage());
         }
@@ -356,7 +469,7 @@ public without sharing class PC_ProviderConnectController {
     public static List<String> cancelOpenCases(String cancelReason) {
         try{
             if(String.isBlank(cancelReason)) {
-                throw new PC_CustomException('Cancel Reason cannot be blank.');
+                throw new PC_CustomException('Close Reason cannot be blank.');
             }
             Id pcrtid = Case.SObjectType.getDescribe().getRecordTypeInfosByDeveloperName().get('PC_Case').getRecordTypeId();
             List<Case> lsOpenCases = [
@@ -364,7 +477,8 @@ public without sharing class PC_ProviderConnectController {
                 FROM Case 
                 WHERE RecordTypeId = :pcrtid 
                 AND IsClosed = false 
-                AND OwnerId = :UserInfo.getUserId()];
+                AND OwnerId = :UserInfo.getUserId()
+                WITH SECURITY_ENFORCED];
             if(lsOpenCases.isEmpty()) {
                 return new List<String>();
             }
@@ -373,10 +487,15 @@ public without sharing class PC_ProviderConnectController {
                 if(String.isNotBlank(cancelReason)){
                     c.PC_Specialist_Comments__c = String.isNotBlank(c.PC_Specialist_Comments__c)  ? c.PC_Specialist_Comments__c + '\n\nClosed Reason:\n' + cancelReason : 'Closed Reason:\n' + cancelReason;
                 }
-                c.Status = 'Closed - Unresolved';
+                c.Status = 'Closed Unresolved';
                 lsCaseIds.add(c.Id);
             }
-            update lsOpenCases;
+
+            if (Schema.sObjectType.Case.isUpdateable()) {
+                update lsOpenCases;
+            } else {
+                throw new PC_CustomException('You do not have the proper permissions to close cases.');
+            }
             return lsCaseIds;
         }  catch (Exception e) {
             log_LogService.log('PC_ProviderConnectController.cancelOpenCases Exception', log_LogService.LogType.ERROR, e);
@@ -419,12 +538,8 @@ public without sharing class PC_ProviderConnectController {
     }
 
     private static void createNewChatCache(String chatSessionId) {
-        // PC_Chat_Session__c pcChatSession = new PC_Chat_Session__c(PC_Case__c = caseId);
-
-        // insert pcChatSession;
         Cache.OrgPartition orgPart = Cache.Org.getPartition('local.pcChat');
         orgPart.put(chatSessionId, new PC_CacheResults());
-        // return pcChatSession.Id;
     }
 
     private static List<CaseHistory> getPCPOpenCases(DateTime dt) {
@@ -434,6 +549,7 @@ public without sharing class PC_ProviderConnectController {
             FROM CaseHistory 
             WHERE Field = 'Status' 
             AND CreatedDate > :dt
-            AND Case.CreatedById = :UserInfo.getUserId()];
+            AND Case.CreatedById = :UserInfo.getUserId()
+            WITH SECURITY_ENFORCED];
     }
 }

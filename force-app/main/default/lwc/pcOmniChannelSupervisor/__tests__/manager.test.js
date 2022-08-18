@@ -44,7 +44,6 @@ describe('c-pc-omni-channel-supervisor', () => {
         expect(tabs.length).toBe(2);
 
         return flushPromises().then(() => {
-            console.log(ManagerElement.agentStatus);
             const users = ManagerElement.shadowRoot.querySelectorAll('div.user-container');
             expect(users.length).toBe(9);
         });

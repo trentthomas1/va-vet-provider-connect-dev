@@ -22,9 +22,10 @@ export default class PcChannelSelection extends LightningElement {
             this.showSpinner = false;
             this.dispatchEvent(
                 new ShowToastEvent({
-                    title: 'Error Loading Page',
-                    message: 'Something went wrong getting your availability, please contact your system administrator.',
-                    variant: 'error'
+                    title: 'Error',
+                    message: result.error.body.message,
+                    variant: 'error',
+                    mode: 'sticky'
                 })
             );
         }
@@ -50,7 +51,6 @@ export default class PcChannelSelection extends LightningElement {
                         variant: 'error'
                     })
                 );
-                this.showSpinner = false
             }
         })
         .catch(error => {
@@ -61,6 +61,9 @@ export default class PcChannelSelection extends LightningElement {
                     variant: 'error'
                 })
             );
+        })
+        .finally(() => {
+            this.showSpinner = false
         })
     }
 

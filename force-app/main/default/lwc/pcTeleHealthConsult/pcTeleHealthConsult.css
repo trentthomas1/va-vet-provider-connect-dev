@@ -53,3 +53,12 @@ textarea {
   right: 1%;
   color: #000000;
 }
+
+lightning-helptext {
+  position: relative;
+  top: -5px;
+}
+
+.custom-specialty-color {
+  color: #2376cc;
+}

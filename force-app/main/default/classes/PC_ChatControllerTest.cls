@@ -18,7 +18,12 @@ public class PC_ChatControllerTest {
     **/
     @TestSetup
     static void makeData(){
-        Case c = PC_ProviderConnectController.createCase('Cardiology', 'Test Details', '987654321', 'Chat', '1234567890');
+        User admin = [SELECT Id FROM User WHERE Profile.Name = 'System Administrator' AND IsActive = true limit 1];
+
+        System.runAs(admin) {
+            PC_TestDataFactory.createProvider('Test PC Provider');
+            PC_TestDataFactory.createSpecialist('Test PC Specialist');
+        }  
     }
     
     /**
@@ -28,19 +33,23 @@ public class PC_ChatControllerTest {
     **/
     @isTest
     public static void getChatterMessagesTestPositive() {
-        Case c = [SELECT ID FROM Case LIMIT 1];
+        User pcProvider = [SELECT Id FROM User WHERE LastName = 'Test PC Provider'];
 
-        PC_Chat_Session__c session = [SELECT Id FROM PC_Chat_Session__c WHERE PC_Case__c = :c.Id];
+        System.runAs(pcProvider) {
+            Case c = PC_ProviderConnectController.createCase('Cardiology', 'Test Details', '987654321', 'Chat', '1234567890');
 
-        insert new FeedItem(ParentId=session.Id, Type='TextPost', Body='Test', IsRichText = false, NetworkScope='AllNetworks', Visibility='InternalUsers', Status='Published');
+            PC_Chat_Session__c session = [SELECT Id FROM PC_Chat_Session__c WHERE PC_Case__c = :c.Id];
 
-        PC_Chat_Session__c returnSession = PC_ChatController.getChatterMessages(session.Id, null, '');
-        
-        System.assert(returnSession.Feeds.size() == 1);
+            insert new FeedItem(ParentId=session.Id, Type='TextPost', Body='Test', IsRichText = false, NetworkScope='AllNetworks', Visibility='InternalUsers', Status='Published');
 
-        returnSession = PC_ChatController.getChatterMessages(null, c.Id, '');
-        
-        System.assert(returnSession.Feeds.size() == 1);
+            PC_Chat_Session__c returnSession = PC_ChatController.getChatterMessages(session.Id, null, '');
+            
+            System.assert(returnSession.Feeds.size() == 1);
+
+            returnSession = PC_ChatController.getChatterMessages(null, c.Id, '');
+            
+            System.assert(returnSession.Feeds.size() == 1);
+        }
     }
 
     /**
@@ -51,8 +60,12 @@ public class PC_ChatControllerTest {
     @IsTest
     public static void getChatterMessagesTestNegative() {
         try{
-            PC_Chat_Session__c returnSession = PC_ChatController.getChatterMessages(null, null, '');
-            System.assert(false);
+            User pcProvider = [SELECT Id FROM User WHERE LastName = 'Test PC Provider'];
+
+            System.runAs(pcProvider) {
+                PC_Chat_Session__c returnSession = PC_ChatController.getChatterMessages(null, null, '');
+                System.assert(false);
+            }
         } catch(Exception e) {
             System.assert(true);
         }
@@ -66,23 +79,27 @@ public class PC_ChatControllerTest {
     **/
     @isTest
     public static void getChatterMessagesCacheTestPositive() {
-        Case c = [SELECT ID FROM Case LIMIT 1];
+        User pcSpecialist = [SELECT Id FROM User WHERE LastName = 'Test PC Specialist'];
 
-        PC_Chat_Session__c session = [SELECT Id FROM PC_Chat_Session__c WHERE PC_Case__c = :c.Id];
+        System.runAs(pcSpecialist) {
+            Case c = PC_ProviderConnectController.createCase('Cardiology', 'Test Details', '987654321', 'Chat', '1234567890');
 
-        insert new FeedItem(ParentId=session.Id, Type='TextPost', Body='Test', IsRichText = false, NetworkScope='AllNetworks', Visibility='InternalUsers', Status='Published');
-        
-        //Without Cache
-        PC_CacheResults returnSession = PC_ChatController.getChatterMessagesCache(session.Id, '');
-        
-        System.assert(returnSession.chatList.size() == 1, returnSession.chatList.size());
-        
-		PC_ChatController.saveChatterMessage(session.Id, 'Test');
-        
-        //With Cache
-        returnSession = PC_ChatController.getChatterMessagesCache(session.Id, '');
-        
-        System.assert(returnSession.chatList.size() == 1, returnSession.chatList.size());
+            PC_Chat_Session__c session = [SELECT Id FROM PC_Chat_Session__c WHERE PC_Case__c = :c.Id];
+
+            insert new FeedItem(ParentId=session.Id, Type='TextPost', Body='Test', IsRichText = false, NetworkScope='AllNetworks', Visibility='InternalUsers', Status='Published');
+            
+            //Without Cache
+            PC_CacheResults returnSession = PC_ChatController.getChatterMessagesCache(session.Id, '');
+            
+            System.assert(returnSession.chatList.size() == 1, returnSession.chatList.size());
+            
+            PC_ChatController.saveChatterMessage(session.Id, 'Test');
+            
+            //With Cache
+            returnSession = PC_ChatController.getChatterMessagesCache(session.Id, '');
+            
+            System.assert(returnSession.chatList.size() == 1, returnSession.chatList.size());
+        }
     }
 
     /**
@@ -93,8 +110,12 @@ public class PC_ChatControllerTest {
     @isTest
     public static void getChatterMessagesCacheTestNegative() {
         try{
-            PC_CacheResults returnSession = PC_ChatController.getChatterMessagesCache(null, '');
-            System.assert(false);
+            User pcProvider = [SELECT Id FROM User WHERE LastName = 'Test PC Provider'];
+
+            System.runAs(pcProvider) {
+                PC_CacheResults returnSession = PC_ChatController.getChatterMessagesCache(null, '');
+                System.assert(false);
+            }
         } catch(Exception e) {
             System.assert(true);
         }
@@ -109,15 +130,19 @@ public class PC_ChatControllerTest {
     **/
     @isTest
     public static void saveChatterMessageTestPositive() {
-        Case c = [SELECT ID FROM Case LIMIT 1];
+        User pcProvider = [SELECT Id FROM User WHERE LastName = 'Test PC Provider'];
 
-        PC_Chat_Session__c session = [SELECT Id FROM PC_Chat_Session__c WHERE PC_Case__c = :c.Id];
+        System.runAs(pcProvider) {
+            Case c = PC_ProviderConnectController.createCase('Cardiology', 'Test Details', '987654321', 'Chat', '1234567890');
 
-        PC_ChatController.saveChatterMessage(session.Id, 'Test');
+            PC_Chat_Session__c session = [SELECT Id FROM PC_Chat_Session__c WHERE PC_Case__c = :c.Id];
 
-        List<PC_Chat_Session__Feed> feed = [SELECT Id FROM PC_Chat_Session__Feed WHERE ParentId = : session.Id];
+            PC_ChatController.saveChatterMessage(session.Id, 'Test');
 
-        System.assert(feed.size() == 1, feed.size());
+            List<PC_Chat_Session__Feed> feed = [SELECT Id FROM PC_Chat_Session__Feed WHERE ParentId = : session.Id];
+
+            System.assert(feed.size() == 1, feed.size());
+        }
     }
 
     /**
@@ -127,22 +152,26 @@ public class PC_ChatControllerTest {
     **/
     @isTest
     public static void saveChatterMessageTestNegative() {
-        Case c = [SELECT ID FROM Case LIMIT 1];
+        User pcProvider = [SELECT Id FROM User WHERE LastName = 'Test PC Provider'];
 
-        PC_Chat_Session__c session = [SELECT Id FROM PC_Chat_Session__c WHERE PC_Case__c = :c.Id];
+        System.runAs(pcProvider) {
+            Case c = PC_ProviderConnectController.createCase('Cardiology', 'Test Details', '987654321', 'Chat', '1234567890');
 
-        try{
-            PC_ChatController.saveChatterMessage(null, 'Test');
-            System.assert(false);
-        } catch(Exception e) {
-            System.assert(true);
-        }
+            PC_Chat_Session__c session = [SELECT Id FROM PC_Chat_Session__c WHERE PC_Case__c = :c.Id];
 
-        try{
-            PC_ChatController.saveChatterMessage(session.Id, null);
-            System.assert(false);
-        } catch(Exception e) {
-            System.assert(true);
+            try{
+                PC_ChatController.saveChatterMessage(null, 'Test');
+                System.assert(false);
+            } catch(Exception e) {
+                System.assert(true);
+            }
+
+            try{
+                PC_ChatController.saveChatterMessage(session.Id, null);
+                System.assert(false);
+            } catch(Exception e) {
+                System.assert(true);
+            }
         }
     }
 
@@ -153,19 +182,23 @@ public class PC_ChatControllerTest {
     **/
     @isTest
     public static void closeChatSessionTestPositive() {
-        Case c = [SELECT ID FROM Case LIMIT 1];
+        User pcProvider = [SELECT Id FROM User WHERE LastName = 'Test PC Provider'];
 
-        PC_Chat_Session__c session = [SELECT Id, PC_Is_Closed__c FROM PC_Chat_Session__c WHERE PC_Case__c = :c.Id];
+        System.runAs(pcProvider) {
+            Case c = PC_ProviderConnectController.createCase('Cardiology', 'Test Details', '987654321', 'Chat', '1234567890');
 
-        System.assertEquals(false, session.PC_Is_Closed__c);
+            PC_Chat_Session__c session = [SELECT Id, PC_Is_Closed__c FROM PC_Chat_Session__c WHERE PC_Case__c = :c.Id];
 
-        PC_Chat_Session__c returnSession = PC_ChatController.closeChatSession(session.Id);
+            System.assertEquals(false, session.PC_Is_Closed__c);
 
-        System.assertEquals(true, returnSession.PC_Is_Closed__c);
+            PC_Chat_Session__c returnSession = PC_ChatController.closeChatSession(session.Id);
 
-        session = [SELECT Id, PC_Is_Closed__c FROM PC_Chat_Session__c WHERE PC_Case__c = :c.Id];
-        
-        System.assertEquals(true, session.PC_Is_Closed__c);
+            System.assertEquals(true, returnSession.PC_Is_Closed__c);
+
+            session = [SELECT Id, PC_Is_Closed__c FROM PC_Chat_Session__c WHERE PC_Case__c = :c.Id];
+            
+            System.assertEquals(true, session.PC_Is_Closed__c);
+        }
 
     }
 
@@ -176,11 +209,15 @@ public class PC_ChatControllerTest {
     **/
     @isTest
     public static void closeChatSessionTestNegative() {
-        try{
-            PC_Chat_Session__c returnSession = PC_ChatController.closeChatSession(null);
-            System.assert(false);
-        } catch(Exception e) {
-            System.assert(true);
+        User pcProvider = [SELECT Id FROM User WHERE LastName = 'Test PC Provider'];
+
+        System.runAs(pcProvider) {
+            try{
+                PC_Chat_Session__c returnSession = PC_ChatController.closeChatSession(null);
+                System.assert(false);
+            } catch(Exception e) {
+                System.assert(true);
+            }
         }
     }
 }

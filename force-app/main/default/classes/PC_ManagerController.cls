@@ -38,7 +38,7 @@ public with sharing class PC_ManagerController {
             List<AgentHistory> returnList = new List<AgentHistory>();
             Id pcRtId = Schema.SObjectType.ServiceResource.getRecordTypeInfosByName().get('Provider Connect Resource').getRecordTypeId();
             List<String> lsUserIds = new List<String>();
-            for(ServiceResource sr : [SELECT RelatedRecordId FROM ServiceResource WHERE RecordTypeId = :pcRtId]) {
+            for(ServiceResource sr : [SELECT RelatedRecordId FROM ServiceResource WHERE RecordTypeId = :pcRtId WITH SECURITY_ENFORCED]) {
                 lsUserIds.add(sr.RelatedRecordId);
             }
 
@@ -46,14 +46,14 @@ public with sharing class PC_ManagerController {
                 throw new PC_CustomException('No Provider Connect specialists found.');
             }
 
-            Map<Id, User> mpUsers = new Map<Id, User> ([SELECT Id, Name, MediumPhotoUrl FROM User WHERE Id in :lsUserIds ORDER BY Name]);
+            Map<Id, User> mpUsers = new Map<Id, User> ([SELECT Id, Name, MediumPhotoUrl FROM User WHERE Id in :lsUserIds WITH SECURITY_ENFORCED ORDER BY Name]);
             Map<String, List<UserServicePresence>> mpUserPresence = new Map<String, List<UserServicePresence>>();
             for(UserServicePresence usp : [
                 SELECT UserId, User.Name, ServicePresenceStatus.MasterLabel, StatusStartDate, ConfiguredCapacity, 
                 StatusEndDate, IsAway, IdleDuration, AtCapacityDuration, AverageCapacity, IsCurrentState, 
                 StatusDuration, PC_Specialty__c, PC_Teams_Channel__c, PC_Chat_Channel__c, PC_Phone_Channel__c 
                 FROM UserServicePresence
-                WHERE UserId in :lsUserIds AND StatusStartDate = LAST_N_DAYS:30
+                WHERE UserId in :lsUserIds AND StatusStartDate = LAST_N_DAYS:30 WITH SECURITY_ENFORCED
                 ORDER BY IsCurrentState DESC, CreatedDate DESC]) {
                 if(mpUserPresence.containsKey(usp.UserId)) {
                     mpUserPresence.get(usp.UserId).add(usp);
@@ -67,7 +67,7 @@ public with sharing class PC_ManagerController {
             for(Case c : [
                 SELECT Id, CaseNumber, CreatedDate, PC_Specialty__c, PC_Channel__c, Status, OwnerId, IsClosed, ClosedDate
                 FROM CASE 
-                WHERE RecordType.DeveloperName = 'PC_Case' AND CreatedDate = LAST_N_DAYS:30
+                WHERE RecordType.DeveloperName = 'PC_Case' AND CreatedDate = LAST_N_DAYS:30 WITH SECURITY_ENFORCED
                 ORDER BY CaseNumber DESC]) {
 
                 if(c.IsClosed == false) {
@@ -84,14 +84,14 @@ public with sharing class PC_ManagerController {
                 }
             }
 
-            List<AgentWork> lsAW = [SELECT UserId, Status, CapacityWeight FROM AgentWork WHERE Status = 'Opened'];
+            List<AgentWork> lsAW = [SELECT UserId, Status, CapacityWeight FROM AgentWork WHERE Status = 'Opened' WITH SECURITY_ENFORCED];
 
             if(Test.isRunningTest()) {
-                User specialist = [SELECT Id FROM User WHERE LastName = 'Test PC Manager' LIMIT 1];
+                User specialist = [SELECT Id FROM User WHERE LastName = 'Test PC Manager' WITH SECURITY_ENFORCED LIMIT 1];
     
-                ServiceChannel sc = [SELECT Id FROM ServiceChannel WHERE DeveloperName = 'PC_Chat_Service' LIMIT 1];
+                ServiceChannel sc = [SELECT Id FROM ServiceChannel WHERE DeveloperName = 'PC_Chat_Service'  WITH SECURITY_ENFORCED LIMIT 1];
 
-                Case c = [SELECT Id FROM Case LIMIT 1];
+                Case c = [SELECT Id FROM Case  WITH SECURITY_ENFORCED LIMIT 1];
                 lsAW.add(new AgentWork(UserID = specialist.Id, WorkItemId =  c.Id, ServiceChannelId = sc.Id, CapacityWeight = 5));
             }
 
