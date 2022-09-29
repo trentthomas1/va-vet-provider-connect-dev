@@ -12,7 +12,7 @@
 		</div>
 	</template>
 	<lightning-card>
-		<div class="slds-var-p-around_medium">
+		<div class="slds-var-p-around_medium ">
 			<template if:true={showSpinner}>
 				<lightning-spinner variant="brand" size="medium" alternative-text="Creating case ...">
 				</lightning-spinner>
@@ -20,19 +20,19 @@
 					<h2>{progressLabel}</h2>
 				</div>
 			</template>
-			<div class="slds-grid slds-wrap">
-				<div class="slds-size_1-of-2 slds-p-left_xx-small">
+			<div class="pc-wrapper">
+				<div class="pc-section slds-p-left_xx-small">
 					<p class="slds-text-heading_small slds-text-align_center slds-p-bottom_x-small">
 						Select a button for Speciality and Channel <lightning-helptext content="Number after specialty denotes number of consultants online"></lightning-helptext>
 					</p>
 					<table width="100%">
 						<template for:each={skillsAndButtons} for:item="skill">
 							<tr key={skill.skillName}>
-								<th scope='row' class="slds-text-align_left slds-truncate">
+								<th scope='row' title={skill.skillName} class="slds-text-align_left slds-truncate">
 									<strong>
 										<lightning-formatted-text value={skill.skillName} class={skill.skillNameFormat}>
 										</lightning-formatted-text>
-										<span class={skill.skillNameFormat} style='font-size: 12px; font-weight: 400; margin-bottom:10px;'> - {skill.consultantsOnline}</span>
+										<span class={skill.skillNameFormat} style='font-size: 12px; font-weight: 400; margin-bottom:10px;'> ({skill.consultantsOnline})</span>
 									</strong>
 								</th>
 								<td class="slds-var-p-vertical_xxx-small">
@@ -59,7 +59,7 @@
 						</template>
 					</table>
 				</div>
-				<div class="slds-size_1-of-2 slds-p-right_xx-small">
+				<div class="pc-section slds-p-right_xx-small">
 					<p class="slds-text-heading_small slds-text-align_center slds-p-bottom_x-small">
 						Enter additional details for your case (optional)
 					</p>

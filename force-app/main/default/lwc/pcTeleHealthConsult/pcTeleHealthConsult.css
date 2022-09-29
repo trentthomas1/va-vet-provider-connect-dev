@@ -62,3 +62,21 @@ lightning-helptext {
 .custom-specialty-color {
   color: #2376cc;
 }
+
+.pc-wrapper {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.pc-section {
+  flex: auto;
+  flex-direction: row;
+  margin: 8px;
+}
+
+th {
+  max-width: 20vw;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
