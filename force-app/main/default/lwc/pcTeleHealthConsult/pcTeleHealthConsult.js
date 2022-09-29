@@ -161,6 +161,9 @@ export default class TeleHealthConsultation extends NavigationMixin(LightningEle
 		this.consultChannel = event.target.getAttribute('data-channel');
 		this.channelShort = event.target.getAttribute('data-channel-short');
 		this.skillsAndButtons.find((element) => element.skillName === this.selectedSkill)[this.channelShort].variant = 'brand';
+		setTimeout(() => {
+			this.template.querySelector('[data-id="case-details"]').focus(); //Wont focus if text area is disabled, waiting for logic to enable the text area
+		}, 250)
 	}
 
 	handleCaseDetails(event) {
